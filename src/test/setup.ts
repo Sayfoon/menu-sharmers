@@ -1,15 +1,4 @@
 
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import matchers from '@testing-library/jest-dom/matchers';
+import '@testing-library/jest-dom';
 
-// Extend Vitest's expect with Testing Library matchers
-expect.extend(matchers);
-
-// Clean up after each test
-afterEach(() => {
-  cleanup();
-});
-
-// Make sure vi is available globally
-global.vi = vi;
+// Add any global test setup code here
