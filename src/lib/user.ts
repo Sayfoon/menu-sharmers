@@ -1,96 +1,90 @@
 
 import { User } from '../types';
+import { supabase } from '../integrations/supabase/client';
 
-// Mock Users
-export const users: User[] = [
-  {
-    id: '1',
-    email: 'demo@example.com',
-    name: 'Demo User',
-    password: 'password123', // In a real app, this would be hashed
-    restaurantId: '1'
-  }
-];
-
-// Authentication helpers using localStorage to simulate a JSON file database
-const USERS_STORAGE_KEY = 'sharmers-menus-users';
-const CURRENT_USER_KEY = 'sharmers-menus-current-user';
-
-// Load users from localStorage
-export const loadUsers = (): User[] => {
-  const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-  if (storedUsers) {
-    return JSON.parse(storedUsers);
-  }
-  // Initialize with mock data if no users exist
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-  return users;
-};
-
-// Save users to localStorage
-export const saveUsers = (updatedUsers: User[]): void => {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-};
-
-// Load current user from localStorage
-export const loadCurrentUser = (): User | null => {
-  const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-  return storedUser ? JSON.parse(storedUser) : null;
-};
-
-// Save current user to localStorage
-export const saveCurrentUser = (user: User | null): void => {
-  if (user) {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(CURRENT_USER_KEY);
-  }
-};
-
-// Initialize current user from localStorage or default to first user for demo
-let currentUser: User | null = loadCurrentUser();
-
-export const getCurrentUser = (): User | null => {
-  return currentUser;
-};
-
-export const login = (email: string, password: string): User | null => {
-  const allUsers = loadUsers();
-  const user = allUsers.find(user => user.email === email && user.password === password);
-  if (user) {
-    currentUser = user;
-    saveCurrentUser(user);
-    return user;
-  }
-  return null;
-};
-
-export const logout = (): void => {
-  currentUser = null;
-  saveCurrentUser(null);
-};
-
-export const register = (name: string, email: string, password: string): User | null => {
-  const allUsers = loadUsers();
+// Authentication helpers using Supabase Auth
+export const getCurrentUser = async (): Promise<User | null> => {
+  const { data: { session } } = await supabase.auth.getSession();
   
-  // Check if user already exists
-  if (allUsers.some(user => user.email === email)) {
+  if (!session) return null;
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
+  
+  if (!profile) return null;
+  
+  return {
+    id: session.user.id,
+    email: session.user.email || '',
+    name: profile.name || '',
+    restaurantId: profile.restaurant_id || undefined
+  };
+};
+
+export const login = async (email: string, password: string): Promise<User | null> => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  
+  if (error || !data.session) {
+    console.error('Login error:', error);
     return null;
   }
   
-  const newUser: User = {
-    id: `user-${Date.now()}`,
-    name,
-    email,
-    password, // In a real app, this would be hashed
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+    
+  return {
+    id: data.user.id,
+    email: data.user.email || '',
+    name: profile?.name || '',
+    restaurantId: profile?.restaurant_id || undefined
   };
+};
+
+export const logout = async (): Promise<void> => {
+  await supabase.auth.signOut();
+};
+
+export const register = async (name: string, email: string, password: string): Promise<User | null> => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name
+      }
+    }
+  });
   
-  allUsers.push(newUser);
-  saveUsers(allUsers);
+  if (error || !data.user) {
+    console.error('Registration error:', error);
+    return null;
+  }
   
-  // Log in the new user
-  currentUser = newUser;
-  saveCurrentUser(newUser);
+  // The trigger we created will automatically insert the profile
   
-  return newUser;
+  return {
+    id: data.user.id,
+    email: data.user.email || '',
+    name: name,
+    restaurantId: undefined
+  };
+};
+
+// Update restaurant ID for a user
+export const updateUserRestaurantId = async (userId: string, restaurantId: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ restaurant_id: restaurantId })
+    .eq('id', userId);
+    
+  return !error;
 };

@@ -1,5 +1,7 @@
 
 import { Restaurant } from '../types';
+import { supabase } from '../integrations/supabase/client';
+import { updateUserRestaurantId } from './user';
 
 // Update storage key constant for consistent access
 const RESTAURANTS_STORAGE_KEY = 'sharmers-menus-restaurants';
@@ -44,7 +46,7 @@ export const getRestaurantById = (id: string): Restaurant | undefined => {
 };
 
 // CRUD operations for restaurant
-export const createRestaurant = (restaurant: Omit<Restaurant, 'id'>): Restaurant => {
+export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Promise<Restaurant> => {
   const newRestaurant: Restaurant = {
     ...restaurant,
     id: `restaurant-${Date.now()}`
@@ -56,12 +58,14 @@ export const createRestaurant = (restaurant: Omit<Restaurant, 'id'>): Restaurant
   // Save to localStorage
   saveRestaurants(restaurants);
   
-  // Update current user
-  const currentUser = localStorage.getItem('sharmers-menus-current-user');
-  if (currentUser) {
-    const user = JSON.parse(currentUser);
-    user.restaurantId = newRestaurant.id;
-    localStorage.setItem('sharmers-menus-current-user', JSON.stringify(user));
+  // Update user's restaurant_id in Supabase
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await updateUserRestaurantId(session.user.id, newRestaurant.id);
+    }
+  } catch (error) {
+    console.error('Error updating user restaurant ID:', error);
   }
   
   return newRestaurant;

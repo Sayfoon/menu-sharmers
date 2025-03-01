@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
-import { register } from '@/lib/data';
+import { register } from '@/lib/user';
 import { RegisterFormData } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -74,7 +74,7 @@ const Register = () => {
     
     try {
       // Register user
-      const user = register(formData.name, formData.email, formData.password);
+      const user = await register(formData.name, formData.email, formData.password);
       
       if (user) {
         toast({
@@ -83,7 +83,7 @@ const Register = () => {
         });
         navigate('/dashboard');
       } else {
-        setError('This email is already registered. Please use a different email or login.');
+        setError('This email may already be registered. Please use a different email or login.');
       }
     } catch (error) {
       console.error('Registration error:', error);

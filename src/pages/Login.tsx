@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login } from '@/lib/data';
+import { login } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -22,7 +22,7 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      const user = login(email, password);
+      const user = await login(email, password);
       
       if (user) {
         toast({
@@ -108,10 +108,6 @@ const Login = () => {
                 >
                   Sign up
                 </Link>
-              </div>
-
-              <div className="text-center text-sm text-gray-500 mt-4">
-                <p>Demo account: demo@example.com with any password</p>
               </div>
             </form>
           </div>

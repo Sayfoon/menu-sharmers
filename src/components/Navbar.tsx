@@ -3,21 +3,58 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getCurrentUser, logout } from '@/lib/data';
+import { getCurrentUser, logout } from '@/lib/user';
+import { User } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
+
+  // Fetch the current user when the component mounts
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          const user = await getCurrentUser();
+          setCurrentUser(user);
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+        }
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
+    setCurrentUser(null);
     navigate('/login');
   };
 
