@@ -1,4 +1,3 @@
-
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,28 +21,16 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, we'd validate credentials with a backend
-      // For demo, use "demo@example.com" with any password
       const user = login(email, password);
       
       if (user) {
         toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
+          title: "Logged in successfully",
+          description: "Welcome back!",
         });
         navigate('/dashboard');
       } else {
-        // For demo purposes, allow login with demo@example.com
-        if (email === 'demo@example.com') {
-          const user = login('demo@example.com', 'password');
-          toast({
-            title: "Demo Login",
-            description: "You have logged in with the demo account.",
-          });
-          navigate('/dashboard');
-        } else {
-          setError('Invalid credentials. Try demo@example.com with any password.');
-        }
+        setError('Invalid email or password');
       }
     } catch (error) {
       console.error('Login error:', error);

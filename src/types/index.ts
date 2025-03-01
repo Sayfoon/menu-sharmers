@@ -36,6 +36,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  password: string; // Added password field for registration
   restaurantId?: string;
 }
 
@@ -49,3 +50,12 @@ export const dietaryOptions: DietaryOption[] = [
   'Nut-Free',
   'Seafood-Free'
 ];
+
+export interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  agreeToTerms: boolean;
+}
+

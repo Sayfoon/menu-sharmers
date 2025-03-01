@@ -7,12 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
 import { register } from '@/lib/data';
+import { RegisterFormData } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterFormData>({
     name: '',
     email: '',
     password: '',
@@ -34,6 +35,29 @@ const Register = () => {
     e.preventDefault();
     setError('');
     
+    // Validate form
+    if (!formData.name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -49,7 +73,7 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would create a user in the database
+      // Register user
       const user = register(formData.name, formData.email, formData.password);
       
       if (user) {
@@ -57,7 +81,9 @@ const Register = () => {
           title: "Account created",
           description: "Your account has been successfully created.",
         });
-        navigate('/profile');
+        navigate('/dashboard');
+      } else {
+        setError('This email is already registered. Please use a different email or login.');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -121,7 +147,7 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  minLength={8}
+                  minLength={6}
                 />
               </div>
               
