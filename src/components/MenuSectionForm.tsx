@@ -1,148 +1,160 @@
 
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { MenuSection } from '@/types';
-import { createMenuSection, updateMenuSection, getMenuSectionsByRestaurantId, getCurrentUser } from '@/lib/data';
-import { toast } from '@/components/ui/use-toast';
+import { MenuSection, Restaurant } from '@/types';
+import { createMenuSection, updateMenuSection } from '@/lib/data';
 
 interface MenuSectionFormProps {
-  section?: MenuSection;
-  isEditMode?: boolean;
+  restaurant: Restaurant;
+  sections: MenuSection[];
+  currentSection: Partial<MenuSection>;
+  setCurrentSection: React.Dispatch<React.SetStateAction<Partial<MenuSection>>>;
+  setSections: React.Dispatch<React.SetStateAction<MenuSection[]>>;
+  isEditing: boolean;
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const MenuSectionForm = ({ section, isEditMode = false }: MenuSectionFormProps) => {
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const currentUser = getCurrentUser();
-  
-  if (!currentUser?.restaurantId) {
-    navigate('/profile');
-    toast({
-      title: "No restaurant found",
-      description: "Please create a restaurant profile first",
-      variant: "destructive",
-    });
-    return null;
-  }
-  
-  const [formData, setFormData] = useState<Omit<MenuSection, 'id'>>({
-    name: section?.name || '',
-    description: section?.description || '',
-    restaurantId: section?.restaurantId || currentUser.restaurantId,
-    order: section?.order || getNextSectionOrder(),
-  });
-
-  function getNextSectionOrder(): number {
-    if (!currentUser.restaurantId) return 1;
-    const sections = getMenuSectionsByRestaurantId(currentUser.restaurantId);
-    return sections.length > 0 ? Math.max(...sections.map(s => s.order)) + 1 : 1;
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
+  restaurant,
+  sections,
+  currentSection,
+  setCurrentSection,
+  setSections,
+  isEditing,
+  setIsEditing
+}) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setCurrentSection({
+      ...currentSection,
+      [name]: value
+    });
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
+    if (!restaurant) return;
+    
+    if (!currentSection.name) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a section name",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      if (isEditMode && section) {
-        await updateMenuSection({ ...formData, id: section.id });
+      if (isEditing && currentSection.id) {
+        const updatedSection = updateMenuSection(currentSection as MenuSection);
+        setSections(sections.map(s => s.id === updatedSection.id ? updatedSection : s));
         toast({
           title: "Success",
-          description: "Menu section updated successfully",
+          description: "Menu section updated successfully"
         });
       } else {
-        await createMenuSection(formData);
+        const newSection = createMenuSection({
+          restaurantId: restaurant.id,
+          name: currentSection.name,
+          description: currentSection.description || '',
+          order: sections.length + 1,
+          coverImage: currentSection.coverImage || ''
+        });
+        setSections([...sections, newSection]);
         toast({
           title: "Success",
-          description: "Menu section created successfully",
+          description: "Menu section created successfully"
         });
       }
-      navigate('/sections');
+      
+      setCurrentSection({
+        name: '',
+        description: '',
+        order: sections.length + 1,
+        coverImage: ''
+      });
+      setIsEditing(false);
     } catch (error) {
-      console.error('Error saving menu section:', error);
       toast({
         title: "Error",
         description: "Failed to save menu section",
-        variant: "destructive",
+        variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Section Name</Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="e.g. Appetizers, Main Courses, Desserts"
-            required
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="description">Description (Optional)</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Short description of this menu section"
-            rows={3}
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="order">Display Order</Label>
-          <Input
-            id="order"
-            name="order"
-            type="number"
-            min="1"
-            step="1"
-            value={formData.order}
-            onChange={handleChange}
-            required
-            className="mt-1"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            This determines the order in which sections appear on your menu (lower numbers appear first)
-          </p>
-        </div>
-      </div>
+  const handleCancel = () => {
+    setCurrentSection({
+      name: '',
+      description: '',
+      order: sections.length + 1,
+      coverImage: ''
+    });
+    setIsEditing(false);
+  };
 
-      <div className="flex justify-end space-x-3">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => navigate('/sections')}
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="bg-terracotta-600 hover:bg-terracotta-700"
-        >
-          {isSubmitting ? 'Saving...' : isEditMode ? 'Update Section' : 'Create Section'}
-        </Button>
-      </div>
-    </form>
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>{isEditing ? 'Edit Menu Section' : 'Add New Menu Section'}</CardTitle>
+        <CardDescription>
+          Menu sections help organize your dishes into categories
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Section Name</Label>
+            <Input 
+              id="name" 
+              name="name" 
+              value={currentSection.name} 
+              onChange={handleInputChange} 
+              placeholder="e.g., Appetizers, Main Courses, Desserts"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea 
+              id="description" 
+              name="description" 
+              value={currentSection.description || ''} 
+              onChange={handleInputChange} 
+              placeholder="Describe this section of your menu"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="coverImage">Cover Image URL (Optional)</Label>
+            <Input 
+              id="coverImage" 
+              name="coverImage" 
+              value={currentSection.coverImage || ''} 
+              onChange={handleInputChange} 
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-sm text-gray-500">This image will be used as a background for the section title</p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          {isEditing && (
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit">
+            {isEditing ? 'Update Section' : 'Add Section'}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   );
 };
 
