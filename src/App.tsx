@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import RestaurantProfile from './pages/RestaurantProfile';
 import MenuSections from './pages/MenuSections';
 import MenuItems from './pages/MenuItems';
+import Menu from './pages/Menu';
 
 function App() {
   // You can add state or other logic here if needed
@@ -23,6 +24,7 @@ function App() {
         <Route path="/profile" element={<RestaurantProfile />} />
         <Route path="/sections" element={<MenuSections />} />
         <Route path="/items/:sectionId" element={<MenuItems />} />
+        <Route path="/menu" element={<Menu />} />
         {/* Add more routes as needed */}
       </Routes>
       <Toaster />
