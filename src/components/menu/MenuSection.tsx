@@ -19,11 +19,11 @@ interface MenuSectionProps {
 const MenuSection: React.FC<MenuSectionProps> = ({ section, items, formatPrice }) => {
   return (
     <div key={section.id} className="border-t pt-8">
-      <div className={`rounded-lg overflow-hidden mb-6 ${section.coverImage ? 'h-48' : ''}`}>
-        {section.coverImage ? (
+      <div className={`rounded-lg overflow-hidden mb-6 ${section.cover_image ? 'h-48' : ''}`}>
+        {section.cover_image ? (
           <div 
             className="w-full h-full bg-cover bg-center relative"
-            style={{ backgroundImage: `url(${section.coverImage})` }}
+            style={{ backgroundImage: `url(${section.cover_image})` }}
           >
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center flex-col p-4">
               <h2 className="text-3xl font-semibold text-white">{section.name}</h2>

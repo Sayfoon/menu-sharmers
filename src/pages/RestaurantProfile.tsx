@@ -15,6 +15,7 @@ const RestaurantProfile = () => {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   const [formData, setFormData] = useState<Omit<Restaurant, 'id'>>({
     name: '',
@@ -29,35 +30,47 @@ const RestaurantProfile = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Redirect to login if not authenticated
-      const user = await getCurrentUser();
-      setCurrentUser(user);
-      
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      // Load restaurant data if user has one
-      if (user.restaurantId) {
-        const restaurantData = getRestaurantById(user.restaurantId);
-        if (restaurantData) {
-          setFormData({
-            name: restaurantData.name,
-            description: restaurantData.description,
-            address: restaurantData.address,
-            phone: restaurantData.phone,
-            cuisine: restaurantData.cuisine,
-            email: restaurantData.email,
-            website: restaurantData.website || '',
-            logo: restaurantData.logo || '',
-          });
+      try {
+        // Redirect to login if not authenticated
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        
+        if (!user) {
+          navigate('/login');
+          return;
         }
+
+        // Load restaurant data if user has one
+        if (user.restaurantId) {
+          const restaurantData = await getRestaurantById(user.restaurantId);
+          if (restaurantData) {
+            setFormData({
+              name: restaurantData.name,
+              description: restaurantData.description || '',
+              address: restaurantData.address,
+              phone: restaurantData.phone,
+              cuisine: restaurantData.cuisine,
+              email: restaurantData.email,
+              website: restaurantData.website || '',
+              logo: restaurantData.logo || '',
+              cover_image: restaurantData.cover_image || '',
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading restaurant data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load restaurant data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
     };
     
     fetchData();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -71,7 +84,7 @@ const RestaurantProfile = () => {
     try {
       if (currentUser?.restaurantId) {
         // Update existing restaurant
-        const updatedRestaurant = updateRestaurant({ 
+        await updateRestaurant({ 
           ...formData, 
           id: currentUser.restaurantId 
         });
@@ -81,15 +94,13 @@ const RestaurantProfile = () => {
         });
       } else {
         // Create new restaurant
-        const newRestaurant = createRestaurant(formData);
+        await createRestaurant(formData);
         toast({
           title: "Success",
           description: "Restaurant created successfully",
         });
-        // Ensure we navigate after successful creation
-        navigate('/dashboard');
-        return;
       }
+      // Navigate back to dashboard after successful operation
       navigate('/dashboard');
     } catch (error) {
       console.error('Error saving restaurant:', error);
@@ -104,6 +115,20 @@ const RestaurantProfile = () => {
   };
 
   const isEditMode = Boolean(currentUser?.restaurantId);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-center">Loading restaurant data...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -45,17 +45,17 @@ const Menu = () => {
           return;
         }
 
-        const restaurantData = getRestaurantById(user.restaurantId);
+        const restaurantData = await getRestaurantById(user.restaurantId);
         if (restaurantData) {
           setRestaurant(restaurantData);
           
-          const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
+          const sectionsData = await getMenuSectionsByRestaurantId(restaurantData.id);
           
           // Get items for each section
-          const sectionsWithItems = sectionsData.map(section => {
-            const items = getMenuItemsBySectionId(section.id);
+          const sectionsWithItems = await Promise.all(sectionsData.map(async section => {
+            const items = await getMenuItemsBySectionId(section.id);
             return { section, items };
-          });
+          }));
           
           setSections(sectionsWithItems);
         }

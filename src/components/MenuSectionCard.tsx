@@ -19,11 +19,11 @@ const MenuSectionCard: React.FC<MenuSectionCardProps> = ({
 }) => {
   return (
     <Card className="overflow-hidden">
-      {section.coverImage && (
+      {section.cover_image && (
         <div className="relative h-40 w-full">
           <div 
             className="absolute inset-0 bg-cover bg-center" 
-            style={{ backgroundImage: `url(${section.coverImage})` }}
+            style={{ backgroundImage: `url(${section.cover_image})` }}
           >
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
               <h3 className="text-white text-2xl font-bold px-4 text-center">{section.name}</h3>
@@ -31,8 +31,8 @@ const MenuSectionCard: React.FC<MenuSectionCardProps> = ({
           </div>
         </div>
       )}
-      <CardHeader className={section.coverImage ? 'pb-2' : ''}>
-        {!section.coverImage && <CardTitle>{section.name}</CardTitle>}
+      <CardHeader className={section.cover_image ? 'pb-2' : ''}>
+        {!section.cover_image && <CardTitle>{section.name}</CardTitle>}
         {section.description && (
           <CardDescription>{section.description}</CardDescription>
         )}

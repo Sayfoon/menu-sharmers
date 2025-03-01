@@ -9,35 +9,41 @@ export interface Restaurant {
   email: string;
   website?: string;
   logo?: string;
-  coverImage?: string;
+  cover_image?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MenuSection {
   id: string;
-  restaurantId: string;
+  restaurant_id: string;
   name: string;
   description?: string;
   order: number;
-  coverImage?: string;
+  cover_image?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MenuItem {
   id: string;
-  sectionId: string;
+  section_id: string;
   name: string;
   description: string;
   price: number;
   image?: string;
-  isAvailable: boolean;
+  is_available: boolean;
   dietary: string[];
   order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  password?: string; // Make password optional
+  password?: string;
   restaurantId?: string;
 }
 

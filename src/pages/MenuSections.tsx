@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -18,36 +19,48 @@ const MenuSections = () => {
     name: '',
     description: '',
     order: 1,
-    coverImage: '',
+    cover_image: '',
   });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchData = async () => {
-      const user = await getCurrentUser();
-      setCurrentUser(user);
-      
-      if (!user) {
-        navigate('/login');
-        return;
-      }
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        
+        if (!user) {
+          navigate('/login');
+          return;
+        }
 
-      if (!user.restaurantId) {
+        if (!user.restaurantId) {
+          toast({
+            title: "Restaurant Required",
+            description: "Please create a restaurant profile first",
+            variant: "destructive"
+          });
+          navigate('/profile');
+          return;
+        }
+
+        const restaurantData = await getRestaurantById(user.restaurantId);
+        if (restaurantData) {
+          setRestaurant(restaurantData);
+          
+          const sectionsData = await getMenuSectionsByRestaurantId(restaurantData.id);
+          setSections(sectionsData);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
         toast({
-          title: "Restaurant Required",
-          description: "Please create a restaurant profile first",
+          title: "Error",
+          description: "Failed to load data",
           variant: "destructive"
         });
-        navigate('/profile');
-        return;
-      }
-
-      const restaurantData = getRestaurantById(user.restaurantId);
-      if (restaurantData) {
-        setRestaurant(restaurantData);
-        
-        const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
-        setSections(sectionsData);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -59,9 +72,9 @@ const MenuSections = () => {
     setIsEditing(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      deleteMenuSection(id);
+      await deleteMenuSection(id);
       setSections(sections.filter(s => s.id !== id));
       toast({
         title: "Success",
@@ -79,6 +92,20 @@ const MenuSections = () => {
   const handleViewItems = (sectionId: string, sectionName: string) => {
     navigate(`/items/${sectionId}`, { state: { sectionName } });
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-center">Loading sections...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

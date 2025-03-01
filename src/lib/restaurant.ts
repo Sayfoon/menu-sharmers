@@ -1,94 +1,113 @@
 
 import { Restaurant } from '../types';
 import { supabase } from '../integrations/supabase/client';
-import { updateUserRestaurantId } from './user';
-
-// Update storage key constant for consistent access
-const RESTAURANTS_STORAGE_KEY = 'sharmers-menus-restaurants';
-
-// Load restaurants from localStorage
-export const loadRestaurants = (): Restaurant[] => {
-  const storedRestaurants = localStorage.getItem(RESTAURANTS_STORAGE_KEY);
-  if (storedRestaurants) {
-    return JSON.parse(storedRestaurants);
-  }
-  
-  // Initialize with mock data if no restaurants exist
-  const initialRestaurants = [
-    {
-      id: '1',
-      name: 'Bella Cucina',
-      description: 'Authentic Italian cuisine in a cozy atmosphere',
-      address: '123 Main St, Anytown, USA',
-      phone: '(555) 123-4567',
-      cuisine: 'Italian',
-      email: 'info@bellacucina.com',
-      website: 'bellacucina.com',
-      logo: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=150&h=150'
-    }
-  ];
-  
-  localStorage.setItem(RESTAURANTS_STORAGE_KEY, JSON.stringify(initialRestaurants));
-  return initialRestaurants;
-};
-
-// Save restaurants to localStorage
-export const saveRestaurants = (restaurants: Restaurant[]): void => {
-  localStorage.setItem(RESTAURANTS_STORAGE_KEY, JSON.stringify(restaurants));
-};
-
-// Initial load of restaurants
-let restaurants: Restaurant[] = loadRestaurants();
+import { getCurrentUser } from './user';
 
 // Helper function to get restaurant by ID
-export const getRestaurantById = (id: string): Restaurant | undefined => {
-  return restaurants.find(restaurant => restaurant.id === id);
+export const getRestaurantById = async (id: string): Promise<Restaurant | undefined> => {
+  try {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching restaurant:', error);
+      return undefined;
+    }
+
+    return data as Restaurant;
+  } catch (error) {
+    console.error('Error fetching restaurant:', error);
+    return undefined;
+  }
 };
 
 // CRUD operations for restaurant
 export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Promise<Restaurant> => {
-  const newRestaurant: Restaurant = {
-    ...restaurant,
-    id: `restaurant-${Date.now()}`
-  };
-  
-  // Add to in-memory array
-  restaurants.push(newRestaurant);
-  
-  // Save to localStorage
-  saveRestaurants(restaurants);
-  
-  // Update user's restaurant_id in Supabase
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await updateUserRestaurantId(session.user.id, newRestaurant.id);
+    const { data, error } = await supabase
+      .from('restaurants')
+      .insert([restaurant])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating restaurant:', error);
+      throw error;
     }
+
+    // Update the user's restaurant_id
+    const user = await getCurrentUser();
+    if (user) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ restaurant_id: data.id })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating user restaurant ID:', updateError);
+      }
+    }
+
+    return data as Restaurant;
   } catch (error) {
-    console.error('Error updating user restaurant ID:', error);
+    console.error('Error creating restaurant:', error);
+    throw error;
   }
-  
-  return newRestaurant;
 };
 
-export const updateRestaurant = (restaurant: Restaurant): Restaurant => {
-  const index = restaurants.findIndex(r => r.id === restaurant.id);
-  if (index >= 0) {
-    restaurants[index] = restaurant;
-    saveRestaurants(restaurants);
-    return restaurant;
+export const updateRestaurant = async (restaurant: Restaurant): Promise<Restaurant> => {
+  try {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .update(restaurant)
+      .eq('id', restaurant.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating restaurant:', error);
+      throw error;
+    }
+
+    return data as Restaurant;
+  } catch (error) {
+    console.error('Error updating restaurant:', error);
+    throw error;
   }
-  
-  // If restaurant doesn't exist, create it instead of throwing an error
-  const newRestaurant: Restaurant = {
-    ...restaurant
-  };
-  restaurants.push(newRestaurant);
-  saveRestaurants(restaurants);
-  return newRestaurant;
 };
 
 // Export these functions to manage restaurant data
-export const getAllRestaurants = (): Restaurant[] => {
-  return [...restaurants];
+export const getAllRestaurants = async (): Promise<Restaurant[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching restaurants:', error);
+      return [];
+    }
+
+    return data as Restaurant[];
+  } catch (error) {
+    console.error('Error fetching restaurants:', error);
+    return [];
+  }
+};
+
+// Function to check if restaurant belongs to the current user
+export const isRestaurantOwner = async (restaurantId: string): Promise<boolean> => {
+  const user = await getCurrentUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('restaurant_id')
+    .eq('id', user.id)
+    .single();
+
+  return data?.restaurant_id === restaurantId;
 };

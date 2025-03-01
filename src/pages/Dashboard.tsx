@@ -29,14 +29,9 @@ const Dashboard = () => {
 
         // Load restaurant data if user has one
         if (user.restaurantId) {
-          const restaurantData = getRestaurantById(user.restaurantId);
+          const restaurantData = await getRestaurantById(user.restaurantId);
           if (restaurantData) {
             setRestaurant(restaurantData);
-          } else {
-            // If restaurantId exists but no restaurant found, clear the restaurantId
-            console.warn('Restaurant ID exists but no restaurant found');
-            user.restaurantId = undefined;
-            // We no longer use localStorage for this
           }
         }
       } catch (error) {

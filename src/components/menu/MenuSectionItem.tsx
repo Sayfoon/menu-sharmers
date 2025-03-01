@@ -37,7 +37,7 @@ const MenuSectionItem: React.FC<MenuSectionItemProps> = ({ item, formatPrice }) 
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-3">
-            {item.dietary.length > 0 && (
+            {item.dietary && item.dietary.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {item.dietary.map(option => (
                   <span 
@@ -49,7 +49,7 @@ const MenuSectionItem: React.FC<MenuSectionItemProps> = ({ item, formatPrice }) 
                 ))}
               </div>
             )}
-            {!item.isAvailable && (
+            {!item.is_available && (
               <div className="mt-2">
                 <span className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs px-2 py-1 rounded-full">
                   Currently Unavailable

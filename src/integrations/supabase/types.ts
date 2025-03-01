@@ -9,6 +9,97 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      menu_items: {
+        Row: {
+          created_at: string
+          description: string
+          dietary: string[] | null
+          id: string
+          image: string | null
+          is_available: boolean
+          name: string
+          order: number
+          price: number
+          section_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          dietary?: string[] | null
+          id?: string
+          image?: string | null
+          is_available?: boolean
+          name: string
+          order?: number
+          price: number
+          section_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          dietary?: string[] | null
+          id?: string
+          image?: string | null
+          is_available?: boolean
+          name?: string
+          order?: number
+          price?: number
+          section_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "menu_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_sections: {
+        Row: {
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          order: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          order?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          order?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_sections_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           email: string | null
@@ -27,6 +118,59 @@ export type Database = {
           id?: string
           name?: string | null
           restaurant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          address: string
+          cover_image: string | null
+          created_at: string
+          cuisine: string
+          description: string | null
+          email: string
+          id: string
+          logo: string | null
+          name: string
+          phone: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          cover_image?: string | null
+          created_at?: string
+          cuisine: string
+          description?: string | null
+          email: string
+          id?: string
+          logo?: string | null
+          name: string
+          phone: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          cover_image?: string | null
+          created_at?: string
+          cuisine?: string
+          description?: string | null
+          email?: string
+          id?: string
+          logo?: string | null
+          name?: string
+          phone?: string
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

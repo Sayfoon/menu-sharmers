@@ -36,7 +36,7 @@ const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!restaurant) return;
@@ -52,19 +52,19 @@ const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
 
     try {
       if (isEditing && currentSection.id) {
-        const updatedSection = updateMenuSection(currentSection as MenuSection);
+        const updatedSection = await updateMenuSection(currentSection as MenuSection);
         setSections(sections.map(s => s.id === updatedSection.id ? updatedSection : s));
         toast({
           title: "Success",
           description: "Menu section updated successfully"
         });
       } else {
-        const newSection = createMenuSection({
-          restaurantId: restaurant.id,
+        const newSection = await createMenuSection({
+          restaurant_id: restaurant.id,
           name: currentSection.name,
           description: currentSection.description || '',
           order: sections.length + 1,
-          coverImage: currentSection.coverImage || ''
+          cover_image: currentSection.cover_image || ''
         });
         setSections([...sections, newSection]);
         toast({
@@ -77,10 +77,11 @@ const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
         name: '',
         description: '',
         order: sections.length + 1,
-        coverImage: ''
+        cover_image: ''
       });
       setIsEditing(false);
     } catch (error) {
+      console.error("Error saving menu section:", error);
       toast({
         title: "Error",
         description: "Failed to save menu section",
@@ -94,7 +95,7 @@ const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
       name: '',
       description: '',
       order: sections.length + 1,
-      coverImage: ''
+      cover_image: ''
     });
     setIsEditing(false);
   };
@@ -132,11 +133,11 @@ const MenuSectionForm: React.FC<MenuSectionFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="coverImage">Cover Image URL (Optional)</Label>
+            <Label htmlFor="cover_image">Cover Image URL (Optional)</Label>
             <Input 
-              id="coverImage" 
-              name="coverImage" 
-              value={currentSection.coverImage || ''} 
+              id="cover_image" 
+              name="cover_image" 
+              value={currentSection.cover_image || ''} 
               onChange={handleInputChange} 
               placeholder="https://example.com/image.jpg"
             />

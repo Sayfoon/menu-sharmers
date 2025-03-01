@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -26,42 +25,57 @@ const MenuItems = () => {
     description: '',
     price: 0,
     image: '',
-    isAvailable: true,
+    is_available: true,
     dietary: [],
     order: 1
   });
+  const [loading, setLoading] = useState(true);
   
-  const currentUser = getCurrentUser();
-
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
+    const fetchData = async () => {
+      try {
+        // Redirect to login if not authenticated
+        const user = await getCurrentUser();
+        if (!user) {
+          navigate('/login');
+          return;
+        }
 
-    if (!sectionId) {
-      toast({
-        title: "Error",
-        description: "No section ID provided",
-        variant: "destructive"
-      });
-      navigate('/sections');
-      return;
-    }
+        if (!sectionId) {
+          toast({
+            title: "Error",
+            description: "No section ID provided",
+            variant: "destructive"
+          });
+          navigate('/sections');
+          return;
+        }
 
-    // Load menu items
-    const itemsData = getMenuItemsBySectionId(sectionId);
-    setItems(itemsData);
+        // Load menu items
+        const itemsData = await getMenuItemsBySectionId(sectionId);
+        setItems(itemsData);
 
-    // Set the order for a new item
-    if (!isEditing) {
-      setCurrentItem(prev => ({
-        ...prev,
-        order: itemsData.length + 1
-      }));
-    }
-  }, [currentUser, navigate, sectionId, isEditing]);
+        // Set the order for a new item
+        if (!isEditing) {
+          setCurrentItem(prev => ({
+            ...prev,
+            order: itemsData.length + 1
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading menu items:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load menu items",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [navigate, sectionId, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -94,11 +108,11 @@ const MenuItems = () => {
   const toggleAvailability = (value: boolean) => {
     setCurrentItem(prev => ({
       ...prev,
-      isAvailable: value
+      is_available: value
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!sectionId) return;
@@ -115,7 +129,7 @@ const MenuItems = () => {
     try {
       if (isEditing && currentItem.id) {
         // Update existing item
-        const updatedItem = updateMenuItem(currentItem as MenuItem);
+        const updatedItem = await updateMenuItem(currentItem as MenuItem);
         setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item));
         toast({
           title: "Success",
@@ -123,13 +137,13 @@ const MenuItems = () => {
         });
       } else {
         // Create new item
-        const newItem = createMenuItem({
-          sectionId,
+        const newItem = await createMenuItem({
+          section_id: sectionId,
           name: currentItem.name,
           description: currentItem.description || '',
           price: currentItem.price || 0,
           image: currentItem.image || '',
-          isAvailable: currentItem.isAvailable !== undefined ? currentItem.isAvailable : true,
+          is_available: currentItem.is_available !== undefined ? currentItem.is_available : true,
           dietary: currentItem.dietary || [],
           order: items.length + 1
         });
@@ -146,12 +160,13 @@ const MenuItems = () => {
         description: '',
         price: 0,
         image: '',
-        isAvailable: true,
+        is_available: true,
         dietary: [],
         order: items.length + 1
       });
       setIsEditing(false);
     } catch (error) {
+      console.error("Error saving menu item:", error);
       toast({
         title: "Error",
         description: "Failed to save menu item",
@@ -165,15 +180,16 @@ const MenuItems = () => {
     setIsEditing(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      deleteMenuItem(id);
+      await deleteMenuItem(id);
       setItems(items.filter(item => item.id !== id));
       toast({
         title: "Success",
         description: "Menu item deleted successfully"
       });
     } catch (error) {
+      console.error("Error deleting menu item:", error);
       toast({
         title: "Error",
         description: "Failed to delete menu item",
@@ -188,7 +204,7 @@ const MenuItems = () => {
       description: '',
       price: 0,
       image: '',
-      isAvailable: true,
+      is_available: true,
       dietary: [],
       order: items.length + 1
     });
@@ -201,6 +217,20 @@ const MenuItems = () => {
       currency: 'USD'
     }).format(price);
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-center">Loading menu items...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -281,7 +311,7 @@ const MenuItems = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="isAvailable" 
-                      checked={currentItem.isAvailable !== undefined ? currentItem.isAvailable : true} 
+                      checked={currentItem.is_available !== undefined ? currentItem.is_available : true} 
                       onCheckedChange={toggleAvailability}
                     />
                     <label
@@ -341,7 +371,7 @@ const MenuItems = () => {
                         />
                       </div>
                     )}
-                    {!item.isAvailable && (
+                    {!item.is_available && (
                       <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 text-xs rounded">
                         Unavailable
                       </div>
