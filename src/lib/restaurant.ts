@@ -46,5 +46,11 @@ export const updateRestaurant = (restaurant: Restaurant): Restaurant => {
     restaurants[index] = restaurant;
     return restaurant;
   }
-  throw new Error('Restaurant not found');
+  
+  // If restaurant doesn't exist, create it instead of throwing an error
+  const newRestaurant: Restaurant = {
+    ...restaurant
+  };
+  restaurants.push(newRestaurant);
+  return newRestaurant;
 };

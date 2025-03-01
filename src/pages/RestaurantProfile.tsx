@@ -75,11 +75,14 @@ const RestaurantProfile = () => {
         });
       } else {
         // Create new restaurant
-        createRestaurant(formData);
+        const newRestaurant = createRestaurant(formData);
         toast({
           title: "Success",
           description: "Restaurant created successfully",
         });
+        // Ensure we navigate after successful creation
+        navigate('/dashboard');
+        return;
       }
       navigate('/dashboard');
     } catch (error) {
