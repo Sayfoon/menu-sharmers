@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import RestaurantProfile from './pages/RestaurantProfile';
+import MenuSections from './pages/MenuSections';
 
 function App() {
   // You can add state or other logic here if needed
@@ -19,6 +20,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<RestaurantProfile />} />
+        <Route path="/sections" element={<MenuSections />} />
         {/* Add more routes as needed */}
       </Routes>
       <Toaster />

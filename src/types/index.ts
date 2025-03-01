@@ -1,4 +1,3 @@
-
 export interface Restaurant {
   id: string;
   name: string;
@@ -18,6 +17,7 @@ export interface MenuSection {
   name: string;
   description?: string;
   order: number;
+  coverImage?: string;
 }
 
 export interface MenuItem {
@@ -36,7 +36,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password: string; // Added password field for registration
+  password: string;
   restaurantId?: string;
 }
 
@@ -58,4 +58,3 @@ export interface RegisterFormData {
   confirmPassword: string;
   agreeToTerms: boolean;
 }
-
