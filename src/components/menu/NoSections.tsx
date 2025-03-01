@@ -14,7 +14,7 @@ const NoSections: React.FC = () => {
   const navigate = useNavigate();
   
   return (
-    <Card>
+    <Card className="my-8">
       <CardHeader>
         <CardTitle>No Menu Sections</CardTitle>
         <CardDescription>

@@ -24,40 +24,49 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const currentUser = getCurrentUser();
+    try {
+      const currentUser = getCurrentUser();
 
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
+      if (!currentUser) {
+        navigate('/login');
+        return;
+      }
 
-    if (!currentUser.restaurantId) {
+      if (!currentUser.restaurantId) {
+        toast({
+          title: "Restaurant Required",
+          description: "Please create a restaurant profile first",
+          variant: "destructive"
+        });
+        navigate('/profile');
+        return;
+      }
+
+      const restaurantData = getRestaurantById(currentUser.restaurantId);
+      if (restaurantData) {
+        setRestaurant(restaurantData);
+        
+        const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
+        
+        // Get items for each section
+        const sectionsWithItems = sectionsData.map(section => {
+          const items = getMenuItemsBySectionId(section.id);
+          return { section, items };
+        });
+        
+        setSections(sectionsWithItems);
+      }
+    } catch (error) {
+      console.error("Error loading menu data:", error);
       toast({
-        title: "Restaurant Required",
-        description: "Please create a restaurant profile first",
+        title: "Error",
+        description: "Failed to load menu data",
         variant: "destructive"
       });
-      navigate('/profile');
-      return;
+    } finally {
+      // Ensure loading is set to false regardless of the outcome
+      setLoading(false);
     }
-
-    const restaurantData = getRestaurantById(currentUser.restaurantId);
-    if (restaurantData) {
-      setRestaurant(restaurantData);
-      
-      const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
-      
-      // Get items for each section
-      const sectionsWithItems = sectionsData.map(section => {
-        const items = getMenuItemsBySectionId(section.id);
-        return { section, items };
-      });
-      
-      setSections(sectionsWithItems);
-    }
-    
-    // Ensure loading is set to false regardless of the outcome
-    setLoading(false);
   }, [navigate]);
 
   if (loading) {
@@ -87,16 +96,18 @@ const Menu = () => {
           {restaurant && <MenuHeader restaurant={restaurant} />}
 
           <div className="space-y-12">
-            {sections.map(({ section, items }) => (
-              <MenuSection 
-                key={section.id} 
-                section={section} 
-                items={items} 
-                formatPrice={formatPrice} 
-              />
-            ))}
-            
-            {sections.length === 0 && <NoSections />}
+            {sections.length > 0 ? (
+              sections.map(({ section, items }) => (
+                <MenuSection 
+                  key={section.id} 
+                  section={section} 
+                  items={items} 
+                  formatPrice={formatPrice} 
+                />
+              ))
+            ) : (
+              <NoSections />
+            )}
           </div>
         </div>
       </main>
