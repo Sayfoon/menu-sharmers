@@ -15,6 +15,7 @@ interface RestaurantFormProps {
   isSubmitting: boolean;
   setIsSubmitting: (value: boolean) => void;
   setError: (value: string | null) => void;
+  refreshData?: () => Promise<void>;
 }
 
 const RestaurantForm = ({ 
@@ -22,7 +23,8 @@ const RestaurantForm = ({
   initialData, 
   isSubmitting, 
   setIsSubmitting, 
-  setError 
+  setError,
+  refreshData
 }: RestaurantFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,6 +69,12 @@ const RestaurantForm = ({
         console.log('Creating new restaurant');
         const newRestaurant = await createRestaurant(formData);
         console.log('Restaurant created:', newRestaurant);
+        
+        // Refresh user data to get the updated restaurantId
+        if (refreshData) {
+          await refreshData();
+        }
+        
         toast({
           title: "Success",
           description: "Restaurant created successfully",

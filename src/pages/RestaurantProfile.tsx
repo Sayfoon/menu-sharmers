@@ -14,7 +14,8 @@ const RestaurantProfile = () => {
     error,
     setError,
     isSubmitting, 
-    setIsSubmitting
+    setIsSubmitting,
+    refreshData
   } = useRestaurantData();
 
   if (loading) {
@@ -43,6 +44,7 @@ const RestaurantProfile = () => {
             isSubmitting={isSubmitting}
             setIsSubmitting={setIsSubmitting}
             setError={setError}
+            refreshData={refreshData}
           />
         </div>
       </main>
