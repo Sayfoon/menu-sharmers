@@ -19,9 +19,13 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        navigate('/dashboard');
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        console.error('Error checking current user:', err);
       }
     };
     

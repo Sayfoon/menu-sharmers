@@ -1,4 +1,3 @@
-
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -58,7 +57,7 @@ export const login = async (email: string, password: string): Promise<User | nul
     
     if (error) {
       console.error('Supabase login error:', error);
-      return null;
+      throw error;
     }
     
     if (!data.session) {
@@ -86,7 +85,7 @@ export const login = async (email: string, password: string): Promise<User | nul
     };
   } catch (error) {
     console.error('Unexpected login error:', error);
-    return null;
+    throw error;
   }
 };
 
@@ -126,7 +125,6 @@ export const register = async (name: string, email: string, password: string): P
       return null;
     }
     
-    // The trigger we created will automatically insert the profile
     console.log('Registration successful');
     
     return {
