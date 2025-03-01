@@ -26,9 +26,9 @@ const Menu = () => {
   const [sections, setSections] = useState<{ section: MenuSection; items: MenuItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const currentUser = getCurrentUser();
-
   useEffect(() => {
+    const currentUser = getCurrentUser();
+
     if (!currentUser) {
       navigate('/login');
       return;
@@ -57,9 +57,11 @@ const Menu = () => {
       });
       
       setSections(sectionsWithItems);
-      setLoading(false);
     }
-  }, [currentUser, navigate]);
+    
+    // Ensure loading is set to false regardless of the outcome
+    setLoading(false);
+  }, [navigate]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
