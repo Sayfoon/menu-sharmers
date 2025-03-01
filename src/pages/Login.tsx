@@ -1,11 +1,11 @@
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login } from '@/lib/user';
+import { login, getCurrentUser } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -15,6 +15,18 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkUser();
+  }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -22,20 +34,23 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Attempting login with:', email);
       const user = await login(email, password);
       
       if (user) {
+        console.log('Login successful, user:', user);
         toast({
           title: "Logged in successfully",
           description: "Welcome back!",
         });
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password');
+        console.error('Login failed: no user returned');
+        setError('Invalid email or password. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('An error occurred during login. Please try again.');
+      setError('An error occurred during login. Please check your credentials and try again.');
     } finally {
       setIsSubmitting(false);
     }
