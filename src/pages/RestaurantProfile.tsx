@@ -28,6 +28,7 @@ const RestaurantProfile = () => {
     email: '',
     website: '',
     logo: '',
+    cover_image: '',
   });
 
   useEffect(() => {
@@ -271,6 +272,29 @@ const RestaurantProfile = () => {
                       alt="Logo preview" 
                       className="h-16 w-16 object-cover rounded-md border"
                       onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=150&h=150')}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="cover_image">Cover Image URL (Optional)</Label>
+                <Input
+                  id="cover_image"
+                  name="cover_image"
+                  value={formData.cover_image || ''}
+                  onChange={handleChange}
+                  placeholder="URL to your restaurant cover image"
+                  className="mt-1"
+                />
+                {formData.cover_image && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 mb-1">Preview:</p>
+                    <img 
+                      src={formData.cover_image} 
+                      alt="Cover image preview" 
+                      className="h-32 w-full object-cover rounded-md border"
+                      onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&h=250')}
                     />
                   </div>
                 )}

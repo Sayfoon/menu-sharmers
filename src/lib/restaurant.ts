@@ -71,6 +71,19 @@ export const updateRestaurant = async (restaurant: Restaurant): Promise<Restaura
   try {
     console.log('Updating restaurant:', restaurant);
     
+    // Check if user is authenticated
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error('Cannot update restaurant: User not authenticated');
+      throw new Error('User must be logged in to update a restaurant');
+    }
+    
+    // Verify the restaurant belongs to the user
+    if (user.restaurantId !== restaurant.id) {
+      console.error('Cannot update restaurant: Restaurant does not belong to user');
+      throw new Error('You can only update your own restaurant');
+    }
+    
     const { data, error } = await supabase
       .from('restaurants')
       .update(restaurant)
