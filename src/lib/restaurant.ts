@@ -29,6 +29,14 @@ export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Prom
   try {
     console.log('Creating restaurant:', restaurant);
     
+    // First, check if user is authenticated
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error('Cannot create restaurant: User not authenticated');
+      throw new Error('User must be logged in to create a restaurant');
+    }
+    
+    // Insert the restaurant
     const { data, error } = await supabase
       .from('restaurants')
       .insert([restaurant])
@@ -43,7 +51,6 @@ export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Prom
     console.log('Restaurant created successfully:', data);
 
     // Update the user's restaurant_id
-    const user = await getCurrentUser();
     if (user && data.id) {
       const updated = await updateUserRestaurantId(user.id, data.id);
       if (!updated) {

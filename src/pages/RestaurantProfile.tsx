@@ -1,13 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, createRestaurant, getRestaurantById, updateRestaurant } from '@/lib/data';
+import { getCurrentUser } from '@/lib/user';
+import { createRestaurant, getRestaurantById, updateRestaurant } from '@/lib/restaurant';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Restaurant, User } from '@/types';
 
 const RestaurantProfile = () => {
@@ -36,6 +38,11 @@ const RestaurantProfile = () => {
         setCurrentUser(user);
         
         if (!user) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to manage your restaurant",
+            variant: "destructive"
+          });
           navigate('/login');
           return;
         }
@@ -82,7 +89,17 @@ const RestaurantProfile = () => {
     setIsSubmitting(true);
     
     try {
-      if (currentUser?.restaurantId) {
+      if (!currentUser) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to save restaurant information",
+          variant: "destructive"
+        });
+        navigate('/login');
+        return;
+      }
+      
+      if (currentUser.restaurantId) {
         // Update existing restaurant
         await updateRestaurant({ 
           ...formData, 
@@ -106,7 +123,7 @@ const RestaurantProfile = () => {
       console.error('Error saving restaurant:', error);
       toast({
         title: "Error",
-        description: "Failed to save restaurant information",
+        description: "Failed to save restaurant information. Please make sure you're logged in.",
         variant: "destructive",
       });
     } finally {
@@ -137,7 +154,7 @@ const RestaurantProfile = () => {
       <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">
-            {isEditMode ? 'Edit Restaurant Profile' : 'Create Restaurant Profile'}
+            {currentUser?.restaurantId ? 'Edit Restaurant Profile' : 'Create Restaurant Profile'}
           </h1>
           
           <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
