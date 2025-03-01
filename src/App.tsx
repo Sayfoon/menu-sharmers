@@ -5,6 +5,7 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import { Toaster } from '@/components/ui/toaster';
 import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   // You can add state or other logic here if needed
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         {/* Add more routes as needed */}
       </Routes>
       <Toaster />
