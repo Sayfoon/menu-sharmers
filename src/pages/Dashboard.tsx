@@ -6,46 +6,52 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Restaurant } from '@/types';
+import { Restaurant, User } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
   useEffect(() => {
-    try {
-      // Redirect to login if not authenticated
-      const currentUser = getCurrentUser();
-      
-      if (!currentUser) {
-        navigate('/login');
-        return;
-      }
-
-      // Load restaurant data if user has one
-      if (currentUser.restaurantId) {
-        const restaurantData = getRestaurantById(currentUser.restaurantId);
-        if (restaurantData) {
-          setRestaurant(restaurantData);
-        } else {
-          // If restaurantId exists but no restaurant found, clear the restaurantId
-          console.warn('Restaurant ID exists but no restaurant found');
-          currentUser.restaurantId = undefined;
-          localStorage.setItem('sharmers-menus-current-user', JSON.stringify(currentUser));
+    const fetchData = async () => {
+      try {
+        // Redirect to login if not authenticated
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        
+        if (!user) {
+          navigate('/login');
+          return;
         }
+
+        // Load restaurant data if user has one
+        if (user.restaurantId) {
+          const restaurantData = getRestaurantById(user.restaurantId);
+          if (restaurantData) {
+            setRestaurant(restaurantData);
+          } else {
+            // If restaurantId exists but no restaurant found, clear the restaurantId
+            console.warn('Restaurant ID exists but no restaurant found');
+            user.restaurantId = undefined;
+            // We no longer use localStorage for this
+          }
+        }
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchData();
   }, [navigate]);
 
   const handleCreateRestaurant = () => {
@@ -65,9 +71,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Get current user (should exist as we check in useEffect)
-  const currentUser = getCurrentUser();
 
   if (!currentUser) {
     return null; // Will redirect in useEffect

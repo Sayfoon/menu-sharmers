@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { 
   getCurrentUser, 
   getRestaurantById, 
@@ -11,7 +11,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { MenuSection as MenuSectionType, MenuItem, Restaurant } from '@/types';
+import { MenuSection as MenuSectionType, MenuItem, Restaurant, User } from '@/types';
 import MenuHeader from '@/components/menu/MenuHeader';
 import MenuSection from '@/components/menu/MenuSection';
 import NoSections from '@/components/menu/NoSections';
@@ -22,51 +22,57 @@ const Menu = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [sections, setSections] = useState<{ section: MenuSectionType; items: MenuItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
   useEffect(() => {
-    try {
-      const currentUser = getCurrentUser();
+    const fetchData = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
 
-      if (!currentUser) {
-        navigate('/login');
-        return;
-      }
+        if (!user) {
+          navigate('/login');
+          return;
+        }
 
-      if (!currentUser.restaurantId) {
+        if (!user.restaurantId) {
+          toast({
+            title: "Restaurant Required",
+            description: "Please create a restaurant profile first",
+            variant: "destructive"
+          });
+          navigate('/profile');
+          return;
+        }
+
+        const restaurantData = getRestaurantById(user.restaurantId);
+        if (restaurantData) {
+          setRestaurant(restaurantData);
+          
+          const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
+          
+          // Get items for each section
+          const sectionsWithItems = sectionsData.map(section => {
+            const items = getMenuItemsBySectionId(section.id);
+            return { section, items };
+          });
+          
+          setSections(sectionsWithItems);
+        }
+      } catch (error) {
+        console.error("Error loading menu data:", error);
         toast({
-          title: "Restaurant Required",
-          description: "Please create a restaurant profile first",
+          title: "Error",
+          description: "Failed to load menu data",
           variant: "destructive"
         });
-        navigate('/profile');
-        return;
+      } finally {
+        // Ensure loading is set to false regardless of the outcome
+        setLoading(false);
       }
-
-      const restaurantData = getRestaurantById(currentUser.restaurantId);
-      if (restaurantData) {
-        setRestaurant(restaurantData);
-        
-        const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
-        
-        // Get items for each section
-        const sectionsWithItems = sectionsData.map(section => {
-          const items = getMenuItemsBySectionId(section.id);
-          return { section, items };
-        });
-        
-        setSections(sectionsWithItems);
-      }
-    } catch (error) {
-      console.error("Error loading menu data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load menu data",
-        variant: "destructive"
-      });
-    } finally {
-      // Ensure loading is set to false regardless of the outcome
-      setLoading(false);
-    }
+    };
+    
+    fetchData();
   }, [navigate]);
 
   if (loading) {

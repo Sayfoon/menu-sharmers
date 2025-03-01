@@ -1,3 +1,4 @@
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -36,7 +37,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password: string;
+  password?: string; // Make password optional
   restaurantId?: string;
 }
 

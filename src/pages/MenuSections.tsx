@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -6,7 +5,7 @@ import { getCurrentUser, getRestaurantById, getMenuSectionsByRestaurantId, delet
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { MenuSection, Restaurant } from '@/types';
+import { MenuSection, Restaurant, User } from '@/types';
 import MenuSectionForm from '@/components/MenuSectionForm';
 import MenuSectionsList from '@/components/MenuSectionsList';
 
@@ -21,33 +20,39 @@ const MenuSections = () => {
     order: 1,
     coverImage: '',
   });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  const currentUser = getCurrentUser();
-
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
-
-    if (!currentUser.restaurantId) {
-      toast({
-        title: "Restaurant Required",
-        description: "Please create a restaurant profile first",
-        variant: "destructive"
-      });
-      navigate('/profile');
-      return;
-    }
-
-    const restaurantData = getRestaurantById(currentUser.restaurantId);
-    if (restaurantData) {
-      setRestaurant(restaurantData);
+    const fetchData = async () => {
+      const user = await getCurrentUser();
+      setCurrentUser(user);
       
-      const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
-      setSections(sectionsData);
-    }
-  }, [currentUser, navigate]);
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      if (!user.restaurantId) {
+        toast({
+          title: "Restaurant Required",
+          description: "Please create a restaurant profile first",
+          variant: "destructive"
+        });
+        navigate('/profile');
+        return;
+      }
+
+      const restaurantData = getRestaurantById(user.restaurantId);
+      if (restaurantData) {
+        setRestaurant(restaurantData);
+        
+        const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
+        setSections(sectionsData);
+      }
+    };
+    
+    fetchData();
+  }, [navigate]);
 
   const handleEdit = (section: MenuSection) => {
     setCurrentSection(section);
