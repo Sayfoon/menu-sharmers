@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -27,13 +26,11 @@ const MenuSections = () => {
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!currentUser) {
       navigate('/login');
       return;
     }
 
-    // Redirect to profile if no restaurant
     if (!currentUser.restaurantId) {
       toast({
         title: "Restaurant Required",
@@ -44,12 +41,10 @@ const MenuSections = () => {
       return;
     }
 
-    // Load restaurant data and menu sections
     const restaurantData = getRestaurantById(currentUser.restaurantId);
     if (restaurantData) {
       setRestaurant(restaurantData);
       
-      // Load menu sections
       const sectionsData = getMenuSectionsByRestaurantId(restaurantData.id);
       setSections(sectionsData);
     }
@@ -79,7 +74,6 @@ const MenuSections = () => {
 
     try {
       if (isEditing && currentSection.id) {
-        // Update existing section
         const updatedSection = updateMenuSection(currentSection as MenuSection);
         setSections(sections.map(s => s.id === updatedSection.id ? updatedSection : s));
         toast({
@@ -87,7 +81,6 @@ const MenuSections = () => {
           description: "Menu section updated successfully"
         });
       } else {
-        // Create new section
         const newSection = createMenuSection({
           restaurantId: restaurant.id,
           name: currentSection.name,
@@ -102,7 +95,6 @@ const MenuSections = () => {
         });
       }
       
-      // Reset form
       setCurrentSection({
         name: '',
         description: '',
@@ -151,6 +143,10 @@ const MenuSections = () => {
     setIsEditing(false);
   };
 
+  const handleViewItems = (sectionId: string, sectionName: string) => {
+    navigate(`/items/${sectionId}`, { state: { sectionName } });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -168,7 +164,6 @@ const MenuSections = () => {
             </p>
           </div>
 
-          {/* Section Form */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>{isEditing ? 'Edit Menu Section' : 'Add New Menu Section'}</CardTitle>
@@ -225,7 +220,6 @@ const MenuSections = () => {
             </form>
           </Card>
 
-          {/* Sections List */}
           <div className="grid gap-6 md:grid-cols-2">
             {sections.length > 0 ? (
               sections.map((section) => (
@@ -248,12 +242,20 @@ const MenuSections = () => {
                       <CardDescription>{section.description}</CardDescription>
                     )}
                   </CardHeader>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => handleEdit(section)}>
-                      Edit
-                    </Button>
-                    <Button variant="destructive" onClick={() => handleDelete(section.id)}>
-                      Delete
+                  <CardFooter className="flex flex-col gap-2">
+                    <div className="flex justify-between w-full">
+                      <Button variant="outline" onClick={() => handleEdit(section)}>
+                        Edit
+                      </Button>
+                      <Button variant="destructive" onClick={() => handleDelete(section.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleViewItems(section.id, section.name)}
+                    >
+                      Manage Menu Items
                     </Button>
                   </CardFooter>
                 </Card>
