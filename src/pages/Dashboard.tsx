@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, getRestaurantById } from '@/lib/data';
@@ -111,7 +110,7 @@ const Dashboard = () => {
                 <p>You haven't set up a restaurant yet. Create your restaurant profile to get started with your digital menu.</p>
               </CardContent>
               <CardFooter>
-                <Button onClick={() => navigate('/profile')} className="w-full bg-terracotta-600 hover:bg-terracotta-700">
+                <Button onClick={() => navigate('/profile')} className="w-full">
                   Create Restaurant Profile
                 </Button>
               </CardFooter>
