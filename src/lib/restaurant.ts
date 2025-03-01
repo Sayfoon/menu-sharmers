@@ -39,13 +39,28 @@ export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Prom
     // Insert the restaurant
     const { data, error } = await supabase
       .from('restaurants')
-      .insert([restaurant])
+      .insert([{
+        name: restaurant.name,
+        description: restaurant.description || '',
+        address: restaurant.address,
+        phone: restaurant.phone,
+        cuisine: restaurant.cuisine,
+        email: restaurant.email,
+        website: restaurant.website || '',
+        logo: restaurant.logo || '',
+        cover_image: restaurant.cover_image || ''
+      }])
       .select()
       .single();
 
     if (error) {
       console.error('Error creating restaurant:', error);
       throw error;
+    }
+
+    if (!data) {
+      console.error('No data returned after creating restaurant');
+      throw new Error('Failed to create restaurant: No data returned');
     }
 
     console.log('Restaurant created successfully:', data);

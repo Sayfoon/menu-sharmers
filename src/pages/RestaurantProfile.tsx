@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '@/lib/user';
@@ -18,6 +17,7 @@ const RestaurantProfile = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Omit<Restaurant, 'id'>>({
     name: '',
@@ -36,6 +36,7 @@ const RestaurantProfile = () => {
       try {
         // Redirect to login if not authenticated
         const user = await getCurrentUser();
+        console.log('Current user:', user);
         setCurrentUser(user);
         
         if (!user) {
@@ -50,8 +51,10 @@ const RestaurantProfile = () => {
 
         // Load restaurant data if user has one
         if (user.restaurantId) {
+          console.log('Loading restaurant data for ID:', user.restaurantId);
           const restaurantData = await getRestaurantById(user.restaurantId);
           if (restaurantData) {
+            console.log('Restaurant data loaded:', restaurantData);
             setFormData({
               name: restaurantData.name,
               description: restaurantData.description || '',
@@ -63,10 +66,16 @@ const RestaurantProfile = () => {
               logo: restaurantData.logo || '',
               cover_image: restaurantData.cover_image || '',
             });
+          } else {
+            console.error('No restaurant data found for ID:', user.restaurantId);
+            setError('Failed to load restaurant data');
           }
+        } else {
+          console.log('User does not have a restaurant yet');
         }
       } catch (error) {
         console.error("Error loading restaurant data:", error);
+        setError("Failed to load restaurant data");
         toast({
           title: "Error",
           description: "Failed to load restaurant data",
@@ -88,6 +97,7 @@ const RestaurantProfile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
     try {
       if (!currentUser) {
@@ -100,8 +110,11 @@ const RestaurantProfile = () => {
         return;
       }
       
+      console.log('Submitting restaurant data:', formData);
+      
       if (currentUser.restaurantId) {
         // Update existing restaurant
+        console.log('Updating existing restaurant with ID:', currentUser.restaurantId);
         await updateRestaurant({ 
           ...formData, 
           id: currentUser.restaurantId 
@@ -112,19 +125,26 @@ const RestaurantProfile = () => {
         });
       } else {
         // Create new restaurant
-        await createRestaurant(formData);
+        console.log('Creating new restaurant');
+        const newRestaurant = await createRestaurant(formData);
+        console.log('Restaurant created:', newRestaurant);
         toast({
           title: "Success",
           description: "Restaurant created successfully",
         });
+        
+        // Update current user with new restaurant ID
+        setCurrentUser(prev => prev ? {...prev, restaurantId: newRestaurant.id} : null);
       }
+      
       // Navigate back to dashboard after successful operation
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving restaurant:', error);
+      setError(error.message || 'Failed to save restaurant information');
       toast({
         title: "Error",
-        description: "Failed to save restaurant information. Please make sure you're logged in.",
+        description: error.message || "Failed to save restaurant information",
         variant: "destructive",
       });
     } finally {
@@ -157,6 +177,12 @@ const RestaurantProfile = () => {
           <h1 className="text-3xl font-bold mb-8 text-center">
             {currentUser?.restaurantId ? 'Edit Restaurant Profile' : 'Create Restaurant Profile'}
           </h1>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+              {error}
+            </div>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
             <div className="space-y-4">
