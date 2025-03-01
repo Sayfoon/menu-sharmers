@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, getRestaurantById } from '@/lib/data';
@@ -6,27 +7,67 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Restaurant } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const currentUser = getCurrentUser();
-
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
-
-    // Load restaurant data if user has one
-    if (currentUser.restaurantId) {
-      const restaurantData = getRestaurantById(currentUser.restaurantId);
-      if (restaurantData) {
-        setRestaurant(restaurantData);
+    try {
+      // Redirect to login if not authenticated
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        navigate('/login');
+        return;
       }
+
+      // Load restaurant data if user has one
+      if (currentUser.restaurantId) {
+        const restaurantData = getRestaurantById(currentUser.restaurantId);
+        if (restaurantData) {
+          setRestaurant(restaurantData);
+        } else {
+          // If restaurantId exists but no restaurant found, clear the restaurantId
+          console.warn('Restaurant ID exists but no restaurant found');
+          currentUser.restaurantId = undefined;
+          localStorage.setItem('sharmers-menus-current-user', JSON.stringify(currentUser));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [currentUser, navigate]);
+  }, [navigate]);
+
+  const handleCreateRestaurant = () => {
+    navigate('/profile');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-center">Loading dashboard...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Get current user (should exist as we check in useEffect)
+  const currentUser = getCurrentUser();
 
   if (!currentUser) {
     return null; // Will redirect in useEffect
@@ -94,8 +135,8 @@ const Dashboard = () => {
                   <p className="text-sm">Preview your menu as customers will see it and share your digital menu with others.</p>
                 </CardContent>
                 <CardFooter>
-                  <Button onClick={() => navigate('/preview')} variant="outline" className="w-full">
-                    View Preview
+                  <Button onClick={() => navigate('/menu')} variant="outline" className="w-full">
+                    View Menu
                   </Button>
                 </CardFooter>
               </Card>
@@ -110,7 +151,7 @@ const Dashboard = () => {
                 <p>You haven't set up a restaurant yet. Create your restaurant profile to get started with your digital menu.</p>
               </CardContent>
               <CardFooter>
-                <Button onClick={() => navigate('/profile')} className="w-full">
+                <Button onClick={handleCreateRestaurant} className="w-full">
                   Create Restaurant Profile
                 </Button>
               </CardFooter>
