@@ -92,7 +92,11 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const logout = async (): Promise<void> => {
   try {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
     console.log('User signed out successfully');
   } catch (error) {
     console.error('Logout error:', error);
@@ -140,6 +144,7 @@ export const register = async (name: string, email: string, password: string): P
 // Update restaurant ID for a user
 export const updateUserRestaurantId = async (userId: string, restaurantId: string): Promise<boolean> => {
   try {
+    console.log(`Updating restaurant ID for user ${userId} to ${restaurantId}`);
     const { error } = await supabase
       .from('profiles')
       .update({ restaurant_id: restaurantId })
@@ -150,6 +155,7 @@ export const updateUserRestaurantId = async (userId: string, restaurantId: strin
       return false;
     }
     
+    console.log('Restaurant ID updated successfully');
     return true;
   } catch (error) {
     console.error('Unexpected error updating restaurant ID:', error);

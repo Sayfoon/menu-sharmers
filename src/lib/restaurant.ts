@@ -1,7 +1,7 @@
 
 import { Restaurant } from '../types';
 import { supabase } from '../integrations/supabase/client';
-import { getCurrentUser } from './user';
+import { getCurrentUser, updateUserRestaurantId } from './user';
 
 // Helper function to get restaurant by ID
 export const getRestaurantById = async (id: string): Promise<Restaurant | undefined> => {
@@ -27,6 +27,8 @@ export const getRestaurantById = async (id: string): Promise<Restaurant | undefi
 // CRUD operations for restaurant
 export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Promise<Restaurant> => {
   try {
+    console.log('Creating restaurant:', restaurant);
+    
     const { data, error } = await supabase
       .from('restaurants')
       .insert([restaurant])
@@ -38,16 +40,16 @@ export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Prom
       throw error;
     }
 
+    console.log('Restaurant created successfully:', data);
+
     // Update the user's restaurant_id
     const user = await getCurrentUser();
-    if (user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ restaurant_id: data.id })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Error updating user restaurant ID:', updateError);
+    if (user && data.id) {
+      const updated = await updateUserRestaurantId(user.id, data.id);
+      if (!updated) {
+        console.error('Failed to update user restaurant ID');
+      } else {
+        console.log('User restaurant ID updated successfully');
       }
     }
 
@@ -60,6 +62,8 @@ export const createRestaurant = async (restaurant: Omit<Restaurant, 'id'>): Prom
 
 export const updateRestaurant = async (restaurant: Restaurant): Promise<Restaurant> => {
   try {
+    console.log('Updating restaurant:', restaurant);
+    
     const { data, error } = await supabase
       .from('restaurants')
       .update(restaurant)
@@ -72,6 +76,7 @@ export const updateRestaurant = async (restaurant: Restaurant): Promise<Restaura
       throw error;
     }
 
+    console.log('Restaurant updated successfully:', data);
     return data as Restaurant;
   } catch (error) {
     console.error('Error updating restaurant:', error);
