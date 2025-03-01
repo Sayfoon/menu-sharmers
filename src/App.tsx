@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import Login from './pages/Login';
-import { Toaster } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 import Register from './pages/Register';
 
 function App() {
