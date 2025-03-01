@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login, getCurrentUser } from '@/lib/user';
+import { login, getCurrentUser, logout } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -15,17 +15,39 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  
+  // Clear any stale session on component mount
+  useEffect(() => {
+    const clearStaleSessions = async () => {
+      try {
+        await logout();
+        console.log('Cleared any existing sessions');
+      } catch (err) {
+        console.error('Error clearing existing sessions:', err);
+      }
+    };
+    
+    clearStaleSessions();
+  }, []);
   
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
+      setIsCheckingSession(true);
       try {
         const user = await getCurrentUser();
         if (user) {
+          console.log('Active user session found:', user);
           navigate('/dashboard');
+        } else {
+          console.log('No active session found, staying on login page');
         }
       } catch (err) {
         console.error('Error checking current user:', err);
+        // Don't show an error to the user for this case
+      } finally {
+        setIsCheckingSession(false);
       }
     };
     
@@ -52,13 +74,31 @@ const Login = () => {
         console.error('Login failed: no user returned');
         setError('Invalid email or password. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      setError('An error occurred during login. Please check your credentials and try again.');
+      // Show more specific error message if available
+      if (error.message) {
+        setError(`Error: ${error.message}`);
+      } else {
+        setError('An error occurred during login. Please check your credentials and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while checking session
+  if (isCheckingSession) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <p className="text-gray-600">Checking authentication status...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

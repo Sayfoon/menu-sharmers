@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -8,7 +9,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (sessionError) {
       console.error('Session error:', sessionError);
-      return null;
+      throw sessionError;
     }
     
     if (!session) {
@@ -26,6 +27,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (profileError) {
       console.error('Profile fetch error:', profileError);
+      // Don't throw here, just return null if profile not found
       return null;
     }
     
@@ -42,13 +44,16 @@ export const getCurrentUser = async (): Promise<User | null> => {
     };
   } catch (error) {
     console.error('Error getting current user:', error);
-    return null;
+    throw error;
   }
 };
 
 export const login = async (email: string, password: string): Promise<User | null> => {
   try {
     console.log('Attempting login for:', email);
+    
+    // Clear any existing session before logging in
+    await supabase.auth.signOut();
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -91,6 +96,9 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const logout = async (): Promise<void> => {
   try {
+    // Clear any local storage or IndexedDB data to ensure complete logout
+    localStorage.clear();
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
