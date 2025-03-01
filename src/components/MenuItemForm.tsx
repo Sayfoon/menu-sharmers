@@ -1,5 +1,5 @@
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,22 +20,37 @@ interface MenuItemFormProps {
 const MenuItemForm = ({ sectionId, item, isEditMode = false }: MenuItemFormProps) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [items, setItems] = useState<MenuItem[]>([]);
   
   const [formData, setFormData] = useState<Omit<MenuItem, 'id'>>({
     name: item?.name || '',
     description: item?.description || '',
     price: item?.price || 0,
     image: item?.image || '',
-    isAvailable: item?.isAvailable ?? true,
+    is_available: item?.is_available ?? true,
     dietary: item?.dietary || [],
-    sectionId: item?.sectionId || sectionId,
-    order: item?.order || getNextItemOrder(),
+    section_id: item?.section_id || sectionId,
+    order: item?.order || 1,
   });
 
-  function getNextItemOrder(): number {
-    const items = getMenuItemsBySectionId(sectionId);
-    return items.length > 0 ? Math.max(...items.map(i => i.order)) + 1 : 1;
-  }
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const menuItems = await getMenuItemsBySectionId(sectionId);
+        setItems(menuItems);
+        
+        // Set default order if not editing
+        if (!isEditMode && menuItems.length > 0) {
+          const maxOrder = Math.max(...menuItems.map(i => i.order));
+          setFormData(prev => ({ ...prev, order: maxOrder + 1 }));
+        }
+      } catch (error) {
+        console.error("Error loading menu items:", error);
+      }
+    };
+    
+    loadItems();
+  }, [sectionId, isEditMode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -49,7 +64,7 @@ const MenuItemForm = ({ sectionId, item, isEditMode = false }: MenuItemFormProps
   };
 
   const handleAvailabilityChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, isAvailable: checked }));
+    setFormData(prev => ({ ...prev, is_available: checked }));
   };
 
   const handleDietaryChange = (dietary: DietaryOption, checked: boolean) => {
@@ -169,7 +184,7 @@ const MenuItemForm = ({ sectionId, item, isEditMode = false }: MenuItemFormProps
           <Input
             id="image"
             name="image"
-            value={formData.image}
+            value={formData.image || ''}
             onChange={handleChange}
             placeholder="URL to an image of this item"
             className="mt-1"
@@ -189,12 +204,12 @@ const MenuItemForm = ({ sectionId, item, isEditMode = false }: MenuItemFormProps
         
         <div className="flex items-center space-x-2">
           <Switch
-            id="isAvailable"
-            checked={formData.isAvailable}
+            id="is_available"
+            checked={formData.is_available}
             onCheckedChange={handleAvailabilityChange}
             className="data-[state=checked]:bg-terracotta-600"
           />
-          <Label htmlFor="isAvailable">Item is currently available</Label>
+          <Label htmlFor="is_available">Item is currently available</Label>
         </div>
         
         <div>

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Check, X } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { MenuItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -27,7 +27,7 @@ interface ItemCardProps {
 }
 
 const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
-  const [isAvailable, setIsAvailable] = useState(item.isAvailable);
+  const [isAvailable, setIsAvailable] = useState(item.is_available);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -41,7 +41,7 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
   const handleAvailabilityToggle = async () => {
     setIsUpdating(true);
     try {
-      const updatedItem = { ...item, isAvailable: !isAvailable };
+      const updatedItem = { ...item, is_available: !isAvailable };
       await updateMenuItem(updatedItem);
       setIsAvailable(!isAvailable);
       onUpdate();
@@ -104,7 +104,7 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
               )}
             </h3>
             <div className="flex space-x-1">
-              <Link to={`/sections/${item.sectionId}/items/${item.id}/edit`}>
+              <Link to={`/sections/${item.section_id}/items/${item.id}/edit`}>
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                   <Edit size={16} className="text-gray-500 hover:text-terracotta-600" />
                   <span className="sr-only">Edit</span>
