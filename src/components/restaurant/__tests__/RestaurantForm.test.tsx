@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import RestaurantForm from '../RestaurantForm';
 import { Restaurant } from '@/types';
 import * as restaurantLib from '@/lib/restaurant';
+import '@testing-library/jest-dom'; // Import the jest-dom matchers
 
 // Mock the navigation
 vi.mock('react-router-dom', async () => {
