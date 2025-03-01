@@ -9,6 +9,7 @@ export interface Restaurant {
   email: string;
   website?: string;
   logo?: string;
+  coverImage?: string;
 }
 
 export interface MenuSection {

@@ -11,9 +11,13 @@ const Footer = () => {
           <div className="mb-4 md:mb-0">
             <Link 
               to="/" 
-              className="font-display font-semibold text-lg tracking-tight text-terracotta-600 animate-fade-in hover:opacity-80 transition-opacity"
+              className="flex items-center"
             >
-              Feast
+              <img 
+                src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
+                alt="Sharmers Menus" 
+                className="h-12 hover:opacity-80 transition-opacity"
+              />
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Simple menu management for restaurants
@@ -43,7 +47,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-200 dark:border-gray-800 mt-6 pt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>&copy; {currentYear} Feast. All rights reserved.</p>
+          <p>&copy; {currentYear} Sharmers Menus. All rights reserved.</p>
         </div>
       </div>
     </footer>

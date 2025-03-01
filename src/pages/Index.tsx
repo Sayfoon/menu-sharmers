@@ -15,6 +15,13 @@ const Index = () => {
         <section className="py-24 md:py-32 bg-gradient-to-b from-terracotta-50 to-white dark:from-gray-900 dark:to-gray-950">
           <div className="container mx-auto px-4 flex flex-col items-center text-center">
             <div className="animate-slide-up">
+              <div className="mb-6">
+                <img 
+                  src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
+                  alt="Sharmers Menus" 
+                  className="h-24 mx-auto"
+                />
+              </div>
               <span className="inline-block bg-terracotta-100 text-terracotta-800 rounded-full px-3 py-1 text-sm font-medium mb-5">
                 Restaurant Menu Management
               </span>

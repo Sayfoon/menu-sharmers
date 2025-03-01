@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getCurrentUser, logout } from '@/lib/data';
 
@@ -45,9 +45,13 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link 
           to="/" 
-          className="font-display font-semibold text-lg md:text-xl tracking-tight text-terracotta-600 animate-fade-in hover:opacity-80 transition-opacity"
+          className="flex items-center hover:opacity-80 transition-opacity"
         >
-          Feast
+          <img 
+            src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
+            alt="Sharmers Menus" 
+            className="h-10"
+          />
         </Link>
 
         {/* Desktop Navigation */}
