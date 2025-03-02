@@ -26,8 +26,7 @@ const AuthButtons = ({ currentUser, isMobile = false, onItemClick = () => {} }: 
           <Link to="/register" onClick={onItemClick}>
             <Button 
               variant="default" 
-              className={isMobile ? "w-full " : "ml-2 "}
-              + "bg-terracotta-600 hover:bg-terracotta-700"
+              className={`${isMobile ? "w-full" : "ml-2"} bg-terracotta-600 hover:bg-terracotta-700`}
             >
               Register
             </Button>
