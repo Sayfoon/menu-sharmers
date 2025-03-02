@@ -1,3 +1,4 @@
+
 import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,9 +19,11 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       try {
         console.log("Checking if user is already authenticated...");
         const user = await getCurrentUser();
+        
         if (user) {
           console.log("User already logged in, redirecting to dashboard");
           navigate('/dashboard');
@@ -29,6 +32,8 @@ const Login = () => {
         }
       } catch (err) {
         console.error("Error checking auth:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -57,11 +62,11 @@ const Login = () => {
           description: "Welcome back!",
         });
         
-        // Small delay to ensure session is properly stored
+        // Add a delay before navigation to ensure session is properly stored
         setTimeout(() => {
           console.log("Navigating to dashboard");
           navigate('/dashboard');
-        }, 500);
+        }, 1000);
       } else {
         console.error("Login returned null user");
         setError('Invalid email or password');
@@ -69,6 +74,11 @@ const Login = () => {
     } catch (error: any) {
       console.error('Login error in component:', error);
       setError(error.message || 'Failed to login');
+      toast({
+        title: "Login failed",
+        description: error.message || "An error occurred during login",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +113,7 @@ const Login = () => {
                   placeholder="you@example.com"
                   required
                   className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -121,6 +132,7 @@ const Login = () => {
                   placeholder="••••••••"
                   required
                   className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
               

@@ -5,20 +5,31 @@ import { supabase } from '../integrations/supabase/client';
 // Get the current user from the session
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
+    console.log("Checking for current session...");
     const { data, error } = await supabase.auth.getSession();
     
-    if (error || !data.session) {
-      console.log("No active session found:", error);
+    if (error) {
+      console.error("Session error:", error.message);
+      return null;
+    }
+    
+    if (!data.session) {
+      console.log("No active session found");
       return null;
     }
     
     console.log("Session found:", data.session.user.id);
     
-    const { data: profile } = await supabase
+    // Get user profile from profiles table
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.session.user.id)
       .maybeSingle();
+    
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+    }
     
     return {
       id: data.session.user.id,
@@ -35,14 +46,19 @@ export const getCurrentUser = async (): Promise<User | null> => {
 // Login with email and password
 export const login = async (email: string, password: string): Promise<User | null> => {
   try {
-    console.log("Attempting login with:", email);
+    console.log(`Attempting login with email: ${email}`);
+    
+    // Clear any existing session first to prevent conflicts
+    await supabase.auth.signOut();
+    console.log("Cleared existing session");
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
     if (error) {
-      console.error("Login error:", error.message);
+      console.error("Login error:", error.message, error);
       throw error;
     }
     
@@ -51,22 +67,27 @@ export const login = async (email: string, password: string): Promise<User | nul
       throw new Error('Login failed');
     }
     
-    console.log("Login successful, user:", data.user.id);
-    console.log("Session data:", data.session);
+    console.log("Auth response success:", data);
+    console.log("User authenticated:", data.user.id);
+    console.log("Session created:", !!data.session);
     
-    // Check if session was created
     if (!data.session) {
       console.error("No session created after login");
       throw new Error('Session creation failed');
     }
     
-    const { data: profile } = await supabase
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
       .maybeSingle();
     
-    console.log("Profile data:", profile);
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+    } else {
+      console.log("Profile retrieved:", profile);
+    }
     
     return {
       id: data.user.id,
@@ -74,7 +95,7 @@ export const login = async (email: string, password: string): Promise<User | nul
       name: profile?.name || '',
       restaurantId: profile?.restaurant_id || undefined
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     throw error;
   }
@@ -114,11 +135,14 @@ export const register = async (name: string, email: string, password: string): P
 
 // Logout the current user
 export const logout = async (): Promise<void> => {
+  console.log("Logging out user");
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
+      console.error("Logout error:", error);
       throw error;
     }
+    console.log("Logout successful");
   } catch (error) {
     console.error('Logout error:', error);
     throw error;
