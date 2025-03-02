@@ -14,12 +14,13 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState('');
   
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      setIsLoading(true);
+      setIsCheckingAuth(true);
       try {
         console.log("Checking if user is already authenticated...");
         const user = await getCurrentUser();
@@ -33,7 +34,7 @@ const Login = () => {
       } catch (err) {
         console.error("Error checking auth:", err);
       } finally {
-        setIsLoading(false);
+        setIsCheckingAuth(false);
       }
     };
     
