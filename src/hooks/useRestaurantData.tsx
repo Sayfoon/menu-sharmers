@@ -32,7 +32,10 @@ export const useRestaurantData = () => {
 
   const fetchUserAndRestaurantData = useCallback(async () => {
     try {
-      // Redirect to login if not authenticated
+      setLoading(true);
+      console.log('Fetching user and restaurant data...');
+      
+      // Attempt to get current user
       const user = await getCurrentUser();
       console.log('Current user from getCurrentUser:', user);
       

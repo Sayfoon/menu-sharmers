@@ -1,21 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '@/lib/user';
-import { getRestaurantById } from '@/lib/restaurant';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Restaurant, User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const { currentUser, allRestaurants, restaurant } = useRestaurantData();
+  const { 
+    currentUser, 
+    allRestaurants, 
+    restaurant, 
+    loading 
+  } = useRestaurantData();
   
   const handleCreateRestaurant = () => {
     navigate('/profile');
@@ -27,7 +28,17 @@ const Dashboard = () => {
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
           <div className="max-w-5xl mx-auto">
-            <p className="text-center">Loading dashboard...</p>
+            <div className="text-center">
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-10"></div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 h-48"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </main>
         <Footer />
@@ -35,8 +46,10 @@ const Dashboard = () => {
     );
   }
 
+  // If there's no user at this point, return null to prevent any errors
+  // The hook should handle the redirect to login
   if (!currentUser) {
-    return null; // Will redirect in useRestaurantData hook
+    return null;
   }
 
   return (

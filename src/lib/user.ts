@@ -23,7 +23,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
     
     if (profileError) {
       console.error('Profile fetch error:', profileError);
@@ -47,7 +47,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     return userData;
   } catch (error) {
     console.error('Error getting current user:', error);
-    throw error;
+    return null; // Changed to return null instead of throwing to avoid crashes
   }
 };
 
@@ -76,7 +76,7 @@ export const login = async (email: string, password: string): Promise<User | nul
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
-      .single();
+      .maybeSingle();
       
     if (profileError) {
       console.error('Profile fetch error after login:', profileError);
@@ -100,8 +100,6 @@ export const login = async (email: string, password: string): Promise<User | nul
 export const logout = async (): Promise<void> => {
   try {
     console.log('Logging out user');
-    // Clear any local storage or IndexedDB data to ensure complete logout
-    localStorage.clear();
     
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
