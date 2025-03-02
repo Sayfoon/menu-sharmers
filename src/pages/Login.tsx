@@ -1,3 +1,4 @@
+
 import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,13 @@ const Login = () => {
     const checkUser = async () => {
       try {
         console.log('Checking for active session...');
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setIsCheckingSession(false);
+          return;
+        }
         
         if (session) {
           console.log('Active session found, redirecting to dashboard');
