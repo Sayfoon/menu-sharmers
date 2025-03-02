@@ -19,9 +19,16 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        navigate('/dashboard');
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          console.log("User already logged in, redirecting to dashboard");
+          navigate('/dashboard');
+        } else {
+          console.log("No user logged in, showing login form");
+        }
+      } catch (err) {
+        console.error("Error checking auth:", err);
       }
     };
     
@@ -32,6 +39,12 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+    
+    if (!email || !password) {
+      setError('Email and password are required');
+      setIsLoading(false);
+      return;
+    }
     
     try {
       console.log("Submitting login form with:", email);
