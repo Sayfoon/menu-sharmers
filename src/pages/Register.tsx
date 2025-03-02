@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { register } from '@/lib/user';
 import { RegisterFormData } from '@/types';
 import Navbar from '@/components/Navbar';
@@ -83,11 +83,20 @@ const Register = () => {
         });
         navigate('/dashboard');
       } else {
-        setError('This email may already be registered. Please use a different email or login.');
+        setError('Registration failed. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      setError('An error occurred during registration. Please try again.');
+      // Handle specific Supabase error messages
+      if (error.message) {
+        if (error.message.includes('already registered')) {
+          setError('This email is already registered. Please use a different email or login.');
+        } else {
+          setError(`Registration error: ${error.message}`);
+        }
+      } else {
+        setError('An error occurred during registration. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -172,15 +181,15 @@ const Register = () => {
                   onCheckedChange={(checked) => 
                     setFormData(prev => ({ ...prev, agreeToTerms: checked as boolean }))
                   }
-                  className="data-[state=checked]:bg-terracotta-600 data-[state=checked]:border-terracotta-600"
+                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
                 <Label htmlFor="agreeToTerms" className="text-sm font-normal">
                   I agree to the{' '}
-                  <Link to="#" className="text-terracotta-600 hover:underline">
+                  <Link to="#" className="text-blue-600 hover:underline">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link to="#" className="text-terracotta-600 hover:underline">
+                  <Link to="#" className="text-blue-600 hover:underline">
                     Privacy Policy
                   </Link>
                 </Label>
@@ -188,7 +197,7 @@ const Register = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-terracotta-600 hover:bg-terracotta-700 mt-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating account...' : 'Create account'}
@@ -198,7 +207,7 @@ const Register = () => {
                 Already have an account?{' '}
                 <Link 
                   to="/login" 
-                  className="text-terracotta-600 hover:text-terracotta-800 dark:text-terracotta-400 dark:hover:text-terracotta-300 font-medium"
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                 >
                   Sign in
                 </Link>

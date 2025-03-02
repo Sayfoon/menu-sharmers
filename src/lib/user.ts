@@ -1,4 +1,3 @@
-
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -114,6 +113,8 @@ export const logout = async (): Promise<void> => {
 
 export const register = async (name: string, email: string, password: string): Promise<User | null> => {
   try {
+    console.log('Attempting registration for:', email);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -126,7 +127,7 @@ export const register = async (name: string, email: string, password: string): P
     
     if (error) {
       console.error('Registration error:', error);
-      return null;
+      throw error; // Change to throw so we can catch specific errors in the UI
     }
     
     if (!data.user) {
@@ -134,7 +135,9 @@ export const register = async (name: string, email: string, password: string): P
       return null;
     }
     
-    console.log('Registration successful');
+    console.log('Registration successful, user:', data.user.id);
+    
+    // We don't need to check for profile here as the database trigger will create it
     
     return {
       id: data.user.id,
@@ -144,7 +147,7 @@ export const register = async (name: string, email: string, password: string): P
     };
   } catch (error) {
     console.error('Unexpected registration error:', error);
-    return null;
+    throw error; // Change to throw so the calling code can handle specific errors
   }
 };
 
