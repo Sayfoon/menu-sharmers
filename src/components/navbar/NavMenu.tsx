@@ -19,8 +19,8 @@ const NavMenu = ({ currentUser, isMobile = false, onItemClick = () => {} }: NavM
       
     return `${baseClasses} ${
       isActive 
-        ? 'text-terracotta-600 font-semibold' 
-        : 'text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400'
+        ? 'text-brand-orange font-semibold' 
+        : 'text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange'
     } transition-colors duration-200`;
   };
 
@@ -39,25 +39,25 @@ const NavMenu = ({ currentUser, isMobile = false, onItemClick = () => {} }: NavM
         Dashboard
       </Link>
       <Link 
-        to="/profile" 
-        className={linkClasses('/profile')}
+        to="/menu" 
+        className={linkClasses('/menu')}
         onClick={onItemClick}
       >
-        Restaurant Profile
+        Menu
       </Link>
       <Link 
         to="/sections" 
         className={linkClasses('/sections')}
         onClick={onItemClick}
       >
-        Menu Sections
+        Sections
       </Link>
       <Link 
-        to="/preview" 
-        className={linkClasses('/preview')}
+        to="/profile" 
+        className={linkClasses('/profile')}
         onClick={onItemClick}
       >
-        Preview
+        Profile
       </Link>
     </>
   );
