@@ -73,15 +73,21 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Starting registration process');
       // Register user
       const user = await register(formData.name, formData.email, formData.password);
+      console.log('Registration response:', user);
       
       if (user) {
         toast({
           title: "Account created",
           description: "Your account has been successfully created.",
         });
-        navigate('/dashboard');
+        console.log('Redirecting to dashboard');
+        // Force a small delay to ensure state updates before navigation
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 500);
       } else {
         setError('Registration failed. Please try again.');
       }

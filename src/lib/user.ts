@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -115,6 +116,13 @@ export const register = async (name: string, email: string, password: string): P
   try {
     console.log('Attempting registration for:', email);
     
+    // Clear any existing sessions to avoid conflicts
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      console.log('Warning: Could not clear existing session before registration:', signOutError);
+      // Continue with registration anyway
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -138,6 +146,20 @@ export const register = async (name: string, email: string, password: string): P
     console.log('Registration successful, user:', data.user.id);
     
     // We don't need to check for profile here as the database trigger will create it
+    
+    // After successful registration, sign in the user
+    if (!data.session) {
+      console.log('No session after registration, signing in...');
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (signInError) {
+        console.error('Error signing in after registration:', signInError);
+        // Continue anyway, we'll return the user data
+      }
+    }
     
     return {
       id: data.user.id,
