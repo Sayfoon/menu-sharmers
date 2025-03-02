@@ -14,28 +14,19 @@ const NavMenu = ({ currentUser, isMobile = false, onItemClick = () => {} }: NavM
   const linkClasses = (path: string) => {
     const isActive = location.pathname === path;
     const baseClasses = isMobile 
-      ? "px-3 py-2 rounded-md text-base font-medium" 
+      ? "px-3 py-2 rounded-md text-base font-medium block w-full text-left" 
       : "px-3 py-2 rounded-md text-sm font-medium";
       
     return `${baseClasses} ${
       isActive 
-        ? 'text-terracotta-600' 
+        ? 'text-terracotta-600 font-semibold' 
         : 'text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400'
     } transition-colors duration-200`;
   };
 
+  // We don't need to show navigation items for unauthenticated users
   if (!currentUser) {
-    return (
-      <>
-        <Link 
-          to="/login" 
-          className={linkClasses('/login')}
-          onClick={onItemClick}
-        >
-          Login
-        </Link>
-      </>
-    );
+    return null;
   }
 
   return (

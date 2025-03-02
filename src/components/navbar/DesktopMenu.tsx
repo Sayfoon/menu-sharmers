@@ -9,7 +9,7 @@ interface DesktopMenuProps {
 
 const DesktopMenu = ({ currentUser }: DesktopMenuProps) => {
   return (
-    <div className="hidden md:flex items-center space-x-1">
+    <div className="hidden md:flex items-center space-x-2">
       <NavMenu currentUser={currentUser} />
       <AuthButtons currentUser={currentUser} />
     </div>
