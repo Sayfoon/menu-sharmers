@@ -9,7 +9,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (sessionError) {
       console.error('Session error:', sessionError);
-      throw sessionError;
+      return null; // Return null instead of throwing to avoid blocking UI
     }
     
     if (!session) {
@@ -44,7 +44,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     };
   } catch (error) {
     console.error('Error getting current user:', error);
-    throw error;
+    return null; // Return null instead of throwing to avoid blocking UI
   }
 };
 

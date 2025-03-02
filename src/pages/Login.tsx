@@ -1,3 +1,4 @@
+
 import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,6 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
-      setIsCheckingSession(true);
       try {
         const user = await getCurrentUser();
         if (user) {
@@ -30,13 +30,23 @@ const Login = () => {
         }
       } catch (err) {
         console.error('Error checking current user:', err);
-        // Don't show an error to the user for this case
       } finally {
+        // Always set checking to false after we're done, regardless of outcome
         setIsCheckingSession(false);
       }
     };
     
+    // Set a timeout to prevent infinite loading state
+    const timeoutId = setTimeout(() => {
+      if (isCheckingSession) {
+        console.log('Session check timeout - forcing completion');
+        setIsCheckingSession(false);
+      }
+    }, 3000); // 3 second timeout as failsafe
+    
     checkUser();
+    
+    return () => clearTimeout(timeoutId);
   }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
