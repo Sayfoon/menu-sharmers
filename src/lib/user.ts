@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -19,6 +20,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     console.log('Session found, fetching profile for user:', session.user.id);
     
+    // Check if a profile exists for this user
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -27,20 +29,20 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (profileError) {
       console.error('Profile fetch error:', profileError);
-      // Don't throw here, just return null if profile not found
-      return null;
-    }
-    
-    if (!profile) {
-      console.error('No profile found for user:', session.user.id);
-      return null;
+      // Don't throw here, just return the base user without profile data
+      return {
+        id: session.user.id,
+        email: session.user.email || '',
+        name: '',
+        restaurantId: undefined
+      };
     }
     
     return {
       id: session.user.id,
       email: session.user.email || '',
-      name: profile.name || '',
-      restaurantId: profile.restaurant_id || undefined
+      name: profile?.name || '',
+      restaurantId: profile?.restaurant_id || undefined
     };
   } catch (error) {
     console.error('Error getting current user:', error);

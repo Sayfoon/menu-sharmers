@@ -19,34 +19,40 @@ const Login = () => {
   
   // Check if user is already logged in
   useEffect(() => {
+    let mounted = true;
+    
     const checkUser = async () => {
       try {
         const user = await getCurrentUser();
-        if (user) {
+        if (user && mounted) {
           console.log('Active user session found:', user);
           navigate('/dashboard');
-        } else {
+        } else if (mounted) {
           console.log('No active session found, staying on login page');
+          setIsCheckingSession(false);
         }
       } catch (err) {
         console.error('Error checking current user:', err);
-      } finally {
-        // Always set checking to false after we're done, regardless of outcome
-        setIsCheckingSession(false);
+        if (mounted) {
+          setIsCheckingSession(false);
+        }
       }
     };
     
     // Set a timeout to prevent infinite loading state
     const timeoutId = setTimeout(() => {
-      if (isCheckingSession) {
+      if (mounted && isCheckingSession) {
         console.log('Session check timeout - forcing completion');
         setIsCheckingSession(false);
       }
-    }, 3000); // 3 second timeout as failsafe
+    }, 2000); // 2 second timeout as failsafe
     
     checkUser();
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -68,6 +74,7 @@ const Login = () => {
       } else {
         console.error('Login failed: no user returned');
         setError('Invalid email or password. Please try again.');
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -77,7 +84,6 @@ const Login = () => {
       } else {
         setError('An error occurred during login. Please check your credentials and try again.');
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -131,7 +137,7 @@ const Login = () => {
                   <Label htmlFor="password">Password</Label>
                   <Link 
                     to="#" 
-                    className="text-sm text-terracotta-600 hover:text-terracotta-800 dark:text-terracotta-400 dark:hover:text-terracotta-300"
+                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     Forgot password?
                   </Link>
@@ -148,7 +154,7 @@ const Login = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-terracotta-600 hover:bg-terracotta-700"
+                className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Signing in...' : 'Sign in'}
@@ -158,7 +164,7 @@ const Login = () => {
                 Don't have an account?{' '}
                 <Link 
                   to="/register" 
-                  className="text-terracotta-600 hover:text-terracotta-800 dark:text-terracotta-400 dark:hover:text-terracotta-300 font-medium"
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                 >
                   Sign up
                 </Link>
