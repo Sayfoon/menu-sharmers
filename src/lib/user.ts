@@ -36,12 +36,15 @@ export const getCurrentUser = async (): Promise<User | null> => {
       return null;
     }
     
-    return {
+    const userData: User = {
       id: session.user.id,
       email: session.user.email || '',
       name: profile.name || '',
       restaurantId: profile.restaurant_id || undefined
     };
+    
+    console.log('User data constructed:', userData);
+    return userData;
   } catch (error) {
     console.error('Error getting current user:', error);
     throw error;
@@ -51,9 +54,6 @@ export const getCurrentUser = async (): Promise<User | null> => {
 export const login = async (email: string, password: string): Promise<User | null> => {
   try {
     console.log('Attempting login for:', email);
-    
-    // Clear any existing session before logging in
-    await supabase.auth.signOut();
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -82,12 +82,15 @@ export const login = async (email: string, password: string): Promise<User | nul
       console.error('Profile fetch error after login:', profileError);
     }
     
-    return {
+    const userData: User = {
       id: data.user.id,
       email: data.user.email || '',
       name: profile?.name || '',
       restaurantId: profile?.restaurant_id || undefined
     };
+    
+    console.log('Login successful, user:', userData);
+    return userData;
   } catch (error) {
     console.error('Unexpected login error:', error);
     throw error;
@@ -96,10 +99,11 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const logout = async (): Promise<void> => {
   try {
+    console.log('Logging out user');
     // Clear any local storage or IndexedDB data to ensure complete logout
     localStorage.clear();
     
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -113,6 +117,8 @@ export const logout = async (): Promise<void> => {
 
 export const register = async (name: string, email: string, password: string): Promise<User | null> => {
   try {
+    console.log('Registering user:', email);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -133,14 +139,22 @@ export const register = async (name: string, email: string, password: string): P
       return null;
     }
     
-    console.log('Registration successful');
+    console.log('Registration successful, user ID:', data.user.id);
     
-    return {
+    // Auto-login after registration to prevent session loss
+    if (!data.session) {
+      console.log('No session after registration, attempting login');
+      return await login(email, password);
+    }
+    
+    const userData: User = {
       id: data.user.id,
       email: data.user.email || '',
       name: name,
       restaurantId: undefined
     };
+    
+    return userData;
   } catch (error) {
     console.error('Unexpected registration error:', error);
     return null;

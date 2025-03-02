@@ -1,54 +1,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, getRestaurantById } from '@/lib/data';
+import { getCurrentUser } from '@/lib/user';
+import { getRestaurantById } from '@/lib/restaurant';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Restaurant, User } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { currentUser, allRestaurants, restaurant } = useRestaurantData();
   
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Redirect to login if not authenticated
-        const user = await getCurrentUser();
-        setCurrentUser(user);
-        
-        if (!user) {
-          navigate('/login');
-          return;
-        }
-
-        // Load restaurant data if user has one
-        if (user.restaurantId) {
-          const restaurantData = await getRestaurantById(user.restaurantId);
-          if (restaurantData) {
-            setRestaurant(restaurantData);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [navigate]);
-
   const handleCreateRestaurant = () => {
     navigate('/profile');
   };
@@ -68,7 +36,7 @@ const Dashboard = () => {
   }
 
   if (!currentUser) {
-    return null; // Will redirect in useEffect
+    return null; // Will redirect in useRestaurantData hook
   }
 
   return (
@@ -84,7 +52,7 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {restaurant ? (
+          {currentUser.restaurantId ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader>
@@ -93,12 +61,12 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-4 mb-4">
-                    {restaurant.logo && (
+                    {restaurant?.logo && (
                       <img src={restaurant.logo} alt={restaurant.name} className="w-16 h-16 rounded-full object-cover" />
                     )}
                     <div>
-                      <h3 className="font-medium">{restaurant.name}</h3>
-                      <p className="text-sm text-gray-500">{restaurant.cuisine} cuisine</p>
+                      <h3 className="font-medium">{restaurant?.name}</h3>
+                      <p className="text-sm text-gray-500">{restaurant?.cuisine} cuisine</p>
                     </div>
                   </div>
                 </CardContent>
