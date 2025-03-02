@@ -19,7 +19,6 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     console.log('Session found, fetching profile for user:', session.user.id);
     
-    // Check if a profile exists for this user
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -28,20 +27,20 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (profileError) {
       console.error('Profile fetch error:', profileError);
-      // Don't throw here, just return the base user without profile data
-      return {
-        id: session.user.id,
-        email: session.user.email || '',
-        name: '',
-        restaurantId: undefined
-      };
+      // Don't throw here, just return null if profile not found
+      return null;
+    }
+    
+    if (!profile) {
+      console.error('No profile found for user:', session.user.id);
+      return null;
     }
     
     return {
       id: session.user.id,
       email: session.user.email || '',
-      name: profile?.name || '',
-      restaurantId: profile?.restaurant_id || undefined
+      name: profile.name || '',
+      restaurantId: profile.restaurant_id || undefined
     };
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -113,14 +112,6 @@ export const logout = async (): Promise<void> => {
 
 export const register = async (name: string, email: string, password: string): Promise<User | null> => {
   try {
-    console.log('Starting registration in user.ts for:', email);
-    
-    // First, ensure no existing session to avoid conflicts
-    console.log('Clearing any existing session...');
-    await supabase.auth.signOut();
-    
-    console.log('Calling supabase.auth.signUp with:', { email, name });
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -132,8 +123,8 @@ export const register = async (name: string, email: string, password: string): P
     });
     
     if (error) {
-      console.error('Supabase registration error:', error);
-      throw error; 
+      console.error('Registration error:', error);
+      return null;
     }
     
     if (!data.user) {
@@ -141,25 +132,7 @@ export const register = async (name: string, email: string, password: string): P
       return null;
     }
     
-    console.log('Registration successful, user created with ID:', data.user.id);
-    
-    // Important: After successful registration, need to sign in the user explicitly
-    if (!data.session) {
-      console.log('No session after registration, signing in explicitly...');
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (signInError) {
-        console.error('Error signing in after registration:', signInError);
-        throw signInError;
-      }
-      
-      console.log('Sign-in after registration successful:', signInData.session ? 'Session created' : 'No session created');
-    } else {
-      console.log('Session created during registration');
-    }
+    console.log('Registration successful');
     
     return {
       id: data.user.id,
@@ -169,7 +142,7 @@ export const register = async (name: string, email: string, password: string): P
     };
   } catch (error) {
     console.error('Unexpected registration error:', error);
-    throw error;
+    return null;
   }
 };
 
