@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("Checking if user is already authenticated...");
         const user = await getCurrentUser();
         if (user) {
           console.log("User already logged in, redirecting to dashboard");
@@ -37,6 +37,7 @@ const Login = () => {
   
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    console.log("Submitting login form with:", email);
     setError('');
     setIsLoading(true);
     
@@ -47,16 +48,20 @@ const Login = () => {
     }
     
     try {
-      console.log("Submitting login form with:", email);
       const user = await login(email, password);
       
       if (user) {
+        console.log("Login successful, user:", user);
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
-        console.log("Login successful, navigating to dashboard");
-        navigate('/dashboard');
+        
+        // Small delay to ensure session is properly stored
+        setTimeout(() => {
+          console.log("Navigating to dashboard");
+          navigate('/dashboard');
+        }, 500);
       } else {
         console.error("Login returned null user");
         setError('Invalid email or password');

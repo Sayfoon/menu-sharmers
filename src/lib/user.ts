@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -10,6 +11,8 @@ export const getCurrentUser = async (): Promise<User | null> => {
       console.log("No active session found:", error);
       return null;
     }
+    
+    console.log("Session found:", data.session.user.id);
     
     const { data: profile } = await supabase
       .from('profiles')
@@ -49,12 +52,21 @@ export const login = async (email: string, password: string): Promise<User | nul
     }
     
     console.log("Login successful, user:", data.user.id);
+    console.log("Session data:", data.session);
+    
+    // Check if session was created
+    if (!data.session) {
+      console.error("No session created after login");
+      throw new Error('Session creation failed');
+    }
     
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
       .maybeSingle();
+    
+    console.log("Profile data:", profile);
     
     return {
       id: data.user.id,
