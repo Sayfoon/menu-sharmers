@@ -135,14 +135,35 @@ export const getAllRestaurants = async (): Promise<Restaurant[]> => {
 
 // Function to check if restaurant belongs to the current user
 export const isRestaurantOwner = async (restaurantId: string): Promise<boolean> => {
-  const user = await getCurrentUser();
-  if (!user) return false;
+  try {
+    const user = await getCurrentUser();
+    if (!user) return false;
 
-  const { data } = await supabase
-    .from('profiles')
-    .select('restaurant_id')
-    .eq('id', user.id)
-    .single();
+    const { data } = await supabase
+      .from('profiles')
+      .select('restaurant_id')
+      .eq('id', user.id)
+      .single();
 
-  return data?.restaurant_id === restaurantId;
+    return data?.restaurant_id === restaurantId;
+  } catch (error) {
+    console.error('Error checking restaurant ownership:', error);
+    return false;
+  }
+};
+
+// Get the current user's restaurant
+export const getCurrentUserRestaurant = async (): Promise<Restaurant | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.restaurantId) {
+      console.error('User does not have a restaurant associated');
+      return undefined;
+    }
+
+    return await getRestaurantById(user.restaurantId);
+  } catch (error) {
+    console.error('Error fetching current user restaurant:', error);
+    return undefined;
+  }
 };

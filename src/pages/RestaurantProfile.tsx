@@ -1,15 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import RestaurantLoading from '@/components/restaurant/RestaurantLoading';
 import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
-import { Restaurant } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { getAllRestaurants } from '@/lib/restaurant';
 
 const RestaurantProfile = () => {
   const navigate = useNavigate();
@@ -21,30 +19,12 @@ const RestaurantProfile = () => {
     setError,
     isSubmitting, 
     setIsSubmitting,
-    refreshData
+    refreshData,
+    allRestaurants,
+    loadingRestaurants
   } = useRestaurantData();
 
-  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
-  const [showAllRestaurants, setShowAllRestaurants] = useState(false);
-  const [loadingRestaurants, setLoadingRestaurants] = useState(false);
-
-  const fetchAllRestaurants = async () => {
-    setLoadingRestaurants(true);
-    try {
-      const restaurants = await getAllRestaurants();
-      setAllRestaurants(restaurants);
-    } catch (err) {
-      console.error("Failed to fetch restaurants:", err);
-    } finally {
-      setLoadingRestaurants(false);
-    }
-  };
-
-  useEffect(() => {
-    if (showAllRestaurants) {
-      fetchAllRestaurants();
-    }
-  }, [showAllRestaurants]);
+  const [showAllRestaurants, setShowAllRestaurants] = useState(true);
 
   if (loading) {
     return <RestaurantLoading />;
@@ -87,10 +67,7 @@ const RestaurantProfile = () => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold">All Restaurants</h2>
                 <Button 
-                  onClick={() => {
-                    setShowAllRestaurants(!showAllRestaurants);
-                    if (!showAllRestaurants) fetchAllRestaurants();
-                  }}
+                  onClick={() => setShowAllRestaurants(!showAllRestaurants)}
                 >
                   {showAllRestaurants ? 'Hide Restaurants' : 'View All Restaurants'}
                 </Button>
@@ -103,7 +80,7 @@ const RestaurantProfile = () => {
                   ) : allRestaurants.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {allRestaurants.map(restaurant => (
-                        <Card key={restaurant.id}>
+                        <Card key={restaurant.id} className="hover:shadow-lg transition-shadow">
                           <CardHeader>
                             <CardTitle className="text-lg">{restaurant.name}</CardTitle>
                           </CardHeader>
@@ -112,12 +89,22 @@ const RestaurantProfile = () => {
                             <p className="text-sm mb-1"><strong>Address:</strong> {restaurant.address}</p>
                             <p className="text-sm mb-1"><strong>Phone:</strong> {restaurant.phone}</p>
                             <p className="text-sm"><strong>Email:</strong> {restaurant.email}</p>
+                            {restaurant.logo && (
+                              <div className="mt-3">
+                                <img 
+                                  src={restaurant.logo} 
+                                  alt={`${restaurant.name} logo`}
+                                  className="h-12 w-12 object-cover rounded-md"
+                                  onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=150&h=150')}
+                                />
+                              </div>
+                            )}
                           </CardContent>
                           <CardFooter>
                             <Button 
                               variant="outline" 
                               className="w-full" 
-                              onClick={() => navigate('/menu')}
+                              onClick={() => navigate(`/menu?restaurantId=${restaurant.id}`)}
                             >
                               View Menu
                             </Button>

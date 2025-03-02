@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentUser } from '@/lib/user';
-import { getRestaurantById } from '@/lib/restaurant';
+import { getRestaurantById, getAllRestaurants as fetchAllRestaurants } from '@/lib/restaurant';
 import { Restaurant, User } from '@/types';
 
 export const useRestaurantData = () => {
@@ -13,6 +13,8 @@ export const useRestaurantData = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
+  const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   
   const [formData, setFormData] = useState<Omit<Restaurant, 'id'>>({
     name: '',
@@ -91,10 +93,25 @@ export const useRestaurantData = () => {
     }
   }, [navigate, toast]);
 
+  const getAllRestaurants = useCallback(async () => {
+    setLoadingRestaurants(true);
+    try {
+      const restaurants = await fetchAllRestaurants();
+      setAllRestaurants(restaurants);
+      console.log('All restaurants loaded:', restaurants);
+    } catch (err) {
+      console.error("Failed to fetch restaurants:", err);
+      setError("Failed to fetch restaurants");
+    } finally {
+      setLoadingRestaurants(false);
+    }
+  }, []);
+
   // Initial data load
   useEffect(() => {
     fetchUserAndRestaurantData();
-  }, [fetchUserAndRestaurantData]);
+    getAllRestaurants();
+  }, [fetchUserAndRestaurantData, getAllRestaurants]);
 
   return {
     currentUser,
@@ -106,6 +123,9 @@ export const useRestaurantData = () => {
     setError,
     isSubmitting,
     setIsSubmitting,
-    refreshData: fetchUserAndRestaurantData
+    refreshData: fetchUserAndRestaurantData,
+    allRestaurants,
+    loadingRestaurants,
+    getAllRestaurants
   };
 };
