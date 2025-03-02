@@ -13,8 +13,8 @@ const MobileMenu = ({ isOpen, currentUser, onItemClick }: MobileMenuProps) => {
   if (!isOpen) return null;
   
   return (
-    <div className="md:hidden glass-panel animate-slide-in-right">
-      <div className="flex flex-col space-y-2 p-4">
+    <div className="md:hidden glass-panel animate-slide-in-right p-4">
+      <div className="flex flex-col space-y-3">
         <NavMenu 
           currentUser={currentUser} 
           isMobile={true} 

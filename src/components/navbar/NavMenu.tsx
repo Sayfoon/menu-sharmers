@@ -14,19 +14,28 @@ const NavMenu = ({ currentUser, isMobile = false, onItemClick = () => {} }: NavM
   const linkClasses = (path: string) => {
     const isActive = location.pathname === path;
     const baseClasses = isMobile 
-      ? "px-3 py-2 rounded-md text-base font-medium block w-full text-left" 
+      ? "px-3 py-2 rounded-md text-base font-medium" 
       : "px-3 py-2 rounded-md text-sm font-medium";
       
     return `${baseClasses} ${
       isActive 
-        ? 'text-brand-orange font-semibold' 
-        : 'text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange'
+        ? 'text-terracotta-600' 
+        : 'text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400'
     } transition-colors duration-200`;
   };
 
-  // We don't need to show navigation items for unauthenticated users
   if (!currentUser) {
-    return null;
+    return (
+      <>
+        <Link 
+          to="/login" 
+          className={linkClasses('/login')}
+          onClick={onItemClick}
+        >
+          Login
+        </Link>
+      </>
+    );
   }
 
   return (
@@ -39,25 +48,25 @@ const NavMenu = ({ currentUser, isMobile = false, onItemClick = () => {} }: NavM
         Dashboard
       </Link>
       <Link 
-        to="/menu" 
-        className={linkClasses('/menu')}
+        to="/profile" 
+        className={linkClasses('/profile')}
         onClick={onItemClick}
       >
-        Menu
+        Restaurant Profile
       </Link>
       <Link 
         to="/sections" 
         className={linkClasses('/sections')}
         onClick={onItemClick}
       >
-        Sections
+        Menu Sections
       </Link>
       <Link 
-        to="/profile" 
-        className={linkClasses('/profile')}
+        to="/preview" 
+        className={linkClasses('/preview')}
         onClick={onItemClick}
       >
-        Profile
+        Preview
       </Link>
     </>
   );

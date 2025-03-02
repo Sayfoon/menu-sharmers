@@ -10,7 +10,7 @@ const NavbarLogo = () => {
       <img 
         src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
         alt="Sharmers Menus" 
-        className="h-10 max-w-full"
+        className="h-10"
       />
     </Link>
   );

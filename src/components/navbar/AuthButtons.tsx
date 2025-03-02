@@ -22,31 +22,31 @@ const AuthButtons = ({ currentUser, isMobile = false, onItemClick = () => {} }: 
   if (!currentUser) {
     return (
       <>
-        <Link 
-          to="/login" 
-          className={`${isMobile ? "w-full block mb-2" : ""}`}
-          onClick={onItemClick}
-        >
-          <Button 
-            variant="outline" 
-            className={`${isMobile ? "w-full" : ""} border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300`}
+        {!isMobile && (
+          <Link to="/register" onClick={onItemClick}>
+            <Button 
+              variant="default" 
+              className={isMobile ? "w-full " : "ml-2 "}
+              + "bg-terracotta-600 hover:bg-terracotta-700"
+            >
+              Register
+            </Button>
+          </Link>
+        )}
+        {isMobile && (
+          <Link 
+            to="/register"
+            className="w-full" 
+            onClick={onItemClick}
           >
-            Login
-          </Button>
-        </Link>
-
-        <Link 
-          to="/register" 
-          className={`${isMobile ? "w-full block" : ""}`}
-          onClick={onItemClick}
-        >
-          <Button 
-            variant="default" 
-            className={`${isMobile ? "w-full" : "ml-2"} bg-brand-orange hover:bg-brand-orange/90`}
-          >
-            Register
-          </Button>
-        </Link>
+            <Button 
+              variant="default" 
+              className="w-full bg-terracotta-600 hover:bg-terracotta-700"
+            >
+              Register
+            </Button>
+          </Link>
+        )}
       </>
     );
   }
@@ -55,8 +55,10 @@ const AuthButtons = ({ currentUser, isMobile = false, onItemClick = () => {} }: 
     <>
       {isMobile ? (
         <button 
-          className="px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 text-left w-full hover:text-brand-orange dark:hover:text-brand-orange"
-          onClick={handleLogout}
+          className="px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 text-left"
+          onClick={() => {
+            handleLogout();
+          }}
         >
           Logout
         </button>
@@ -64,7 +66,7 @@ const AuthButtons = ({ currentUser, isMobile = false, onItemClick = () => {} }: 
         <Button 
           variant="ghost" 
           onClick={handleLogout}
-          className="ml-2 text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange"
+          className="ml-2 text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400"
         >
           Logout
         </Button>
