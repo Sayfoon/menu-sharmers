@@ -1,15 +1,15 @@
+
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
 // Authentication helpers using Supabase Auth
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    // First check if we have a session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
       console.error('Session error:', sessionError);
-      return null; // Return null instead of throwing to avoid blocking UI
+      throw sessionError;
     }
     
     if (!session) {
@@ -44,7 +44,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     };
   } catch (error) {
     console.error('Error getting current user:', error);
-    return null; // Return null instead of throwing to avoid blocking UI
+    throw error;
   }
 };
 
@@ -52,7 +52,8 @@ export const login = async (email: string, password: string): Promise<User | nul
   try {
     console.log('Attempting login for:', email);
     
-    // Don't clear existing session before logging in
+    // Clear any existing session before logging in
+    await supabase.auth.signOut();
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

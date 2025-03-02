@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login, getCurrentUser } from '@/lib/user';
+import { login, getCurrentUser, logout } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -17,9 +17,24 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   
+  // Clear any stale session on component mount
+  useEffect(() => {
+    const clearStaleSessions = async () => {
+      try {
+        await logout();
+        console.log('Cleared any existing sessions');
+      } catch (err) {
+        console.error('Error clearing existing sessions:', err);
+      }
+    };
+    
+    clearStaleSessions();
+  }, []);
+  
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
+      setIsCheckingSession(true);
       try {
         const user = await getCurrentUser();
         if (user) {
@@ -30,23 +45,13 @@ const Login = () => {
         }
       } catch (err) {
         console.error('Error checking current user:', err);
+        // Don't show an error to the user for this case
       } finally {
-        // Always set checking to false after we're done, regardless of outcome
         setIsCheckingSession(false);
       }
     };
     
-    // Set a timeout to prevent infinite loading state
-    const timeoutId = setTimeout(() => {
-      if (isCheckingSession) {
-        console.log('Session check timeout - forcing completion');
-        setIsCheckingSession(false);
-      }
-    }, 3000); // 3 second timeout as failsafe
-    
     checkUser();
-    
-    return () => clearTimeout(timeoutId);
   }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
