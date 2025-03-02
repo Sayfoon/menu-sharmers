@@ -1,4 +1,3 @@
-
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -9,7 +8,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (sessionError) {
       console.error('Session error:', sessionError);
-      throw sessionError;
+      return null;
     }
     
     if (!session) {
@@ -47,7 +46,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     return userData;
   } catch (error) {
     console.error('Error getting current user:', error);
-    return null; // Changed to return null instead of throwing to avoid crashes
+    return null; // Return null instead of throwing to avoid crashes
   }
 };
 

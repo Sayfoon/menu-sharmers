@@ -1,13 +1,13 @@
-
 import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login, getCurrentUser, logout } from '@/lib/user';
+import { login, getCurrentUser } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,36 +17,22 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   
-  // Clear any stale session on component mount
-  useEffect(() => {
-    const clearStaleSessions = async () => {
-      try {
-        await logout();
-        console.log('Cleared any existing sessions');
-      } catch (err) {
-        console.error('Error clearing existing sessions:', err);
-      }
-    };
-    
-    clearStaleSessions();
-  }, []);
-  
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
-      setIsCheckingSession(true);
       try {
-        const user = await getCurrentUser();
-        if (user) {
-          console.log('Active user session found:', user);
+        console.log('Checking for active session...');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log('Active session found, redirecting to dashboard');
           navigate('/dashboard');
         } else {
           console.log('No active session found, staying on login page');
+          setIsCheckingSession(false);
         }
       } catch (err) {
-        console.error('Error checking current user:', err);
-        // Don't show an error to the user for this case
-      } finally {
+        console.error('Error checking session:', err);
         setIsCheckingSession(false);
       }
     };
@@ -93,7 +79,9 @@ const Login = () => {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow flex items-center justify-center">
-          <p className="text-gray-600">Checking authentication status...</p>
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4"></div>
+          </div>
         </main>
         <Footer />
       </div>
