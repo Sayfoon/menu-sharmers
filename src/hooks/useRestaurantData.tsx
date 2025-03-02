@@ -3,8 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentUser } from '@/lib/user';
-import { getRestaurantById, getAllRestaurants as fetchAllRestaurants } from '@/lib/restaurant';
+import { getRestaurantById, getAllRestaurants as fetchAllRestaurants, getCurrentUserRestaurant } from '@/lib/restaurant';
 import { Restaurant, User } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useRestaurantData = () => {
   const navigate = useNavigate();
@@ -107,11 +108,31 @@ export const useRestaurantData = () => {
     }
   }, []);
 
-  // Initial data load
+  // Add auth state change listener to maintain session
   useEffect(() => {
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          const user = await getCurrentUser();
+          setCurrentUser(user);
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          navigate('/login');
+        }
+      }
+    );
+
+    // Initial data load
     fetchUserAndRestaurantData();
     getAllRestaurants();
-  }, [fetchUserAndRestaurantData, getAllRestaurants]);
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchUserAndRestaurantData, getAllRestaurants, navigate]);
 
   return {
     currentUser,
