@@ -1,4 +1,3 @@
-
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -8,6 +7,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     const { data, error } = await supabase.auth.getSession();
     
     if (error || !data.session) {
+      console.log("No active session found:", error);
       return null;
     }
     
@@ -32,14 +32,23 @@ export const getCurrentUser = async (): Promise<User | null> => {
 // Login with email and password
 export const login = async (email: string, password: string): Promise<User | null> => {
   try {
+    console.log("Attempting login with:", email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
-    if (error || !data.user) {
-      throw error || new Error('Login failed');
+    if (error) {
+      console.error("Login error:", error.message);
+      throw error;
     }
+    
+    if (!data.user) {
+      console.error("Login failed: No user returned");
+      throw new Error('Login failed');
+    }
+    
+    console.log("Login successful, user:", data.user.id);
     
     const { data: profile } = await supabase
       .from('profiles')

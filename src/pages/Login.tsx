@@ -1,11 +1,11 @@
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login } from '@/lib/user';
+import { login, getCurrentUser } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -16,12 +16,25 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     
     try {
+      console.log("Submitting login form with:", email);
       const user = await login(email, password);
       
       if (user) {
@@ -29,12 +42,14 @@ const Login = () => {
           title: "Login successful",
           description: "Welcome back!",
         });
+        console.log("Login successful, navigating to dashboard");
         navigate('/dashboard');
       } else {
+        console.error("Login returned null user");
         setError('Invalid email or password');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Login error in component:', error);
       setError(error.message || 'Failed to login');
     } finally {
       setIsLoading(false);
