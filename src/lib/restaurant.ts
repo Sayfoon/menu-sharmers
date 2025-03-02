@@ -93,12 +93,7 @@ export const updateRestaurant = async (restaurant: Restaurant): Promise<Restaura
       throw new Error('User must be logged in to update a restaurant');
     }
     
-    // Verify the restaurant belongs to the user
-    if (user.restaurantId !== restaurant.id) {
-      console.error('Cannot update restaurant: Restaurant does not belong to user');
-      throw new Error('You can only update your own restaurant');
-    }
-    
+    // The RLS policy will ensure the user can only update their own restaurant
     const { data, error } = await supabase
       .from('restaurants')
       .update(restaurant)

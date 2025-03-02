@@ -61,8 +61,19 @@ export const useRestaurantData = () => {
             cover_image: restaurantData.cover_image || '',
           });
         } else {
-          console.error('No restaurant data found for ID:', user.restaurantId);
-          setError('Failed to load restaurant data');
+          console.log('No restaurant data found for ID:', user.restaurantId);
+          // Clear form data for a new restaurant
+          setFormData({
+            name: '',
+            description: '',
+            address: '',
+            phone: '',
+            cuisine: '',
+            email: '',
+            website: '',
+            logo: '',
+            cover_image: '',
+          });
         }
       } else {
         console.log('User does not have a restaurant yet');
