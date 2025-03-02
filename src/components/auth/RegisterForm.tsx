@@ -72,7 +72,9 @@ const RegisterForm = () => {
     
     try {
       console.log('Starting registration process');
-      // Register user
+      // Register user - Detailed logging
+      console.log('Attempting registration for:', formData.email);
+      
       const user = await register(formData.name, formData.email, formData.password);
       console.log('Registration response:', user);
       
@@ -81,16 +83,18 @@ const RegisterForm = () => {
           title: "Account created",
           description: "Your account has been successfully created.",
         });
-        console.log('Redirecting to dashboard');
+        console.log('Registration successful, redirecting to dashboard');
+        
         // Force a small delay to ensure state updates before navigation
         setTimeout(() => {
           navigate('/dashboard');
-        }, 500);
+        }, 1000); // Increased delay to ensure proper registration completion
       } else {
         setError('Registration failed. Please try again.');
+        console.error('Registration failed: No user returned');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration error details:', error);
       // Handle specific Supabase error messages
       if (error.message) {
         if (error.message.includes('already registered')) {
