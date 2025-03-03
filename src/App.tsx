@@ -10,6 +10,7 @@ import RestaurantProfile from './pages/RestaurantProfile';
 import MenuSections from './pages/MenuSections';
 import MenuItems from './pages/MenuItems';
 import Menu from './pages/Menu';
+import PublicMenu from './pages/PublicMenu';
 
 function App() {
   // You can add state or other logic here if needed
@@ -25,6 +26,7 @@ function App() {
         <Route path="/sections" element={<MenuSections />} />
         <Route path="/items/:sectionId" element={<MenuItems />} />
         <Route path="/menu" element={<Menu />} />
+        <Route path="/m/:restaurantId" element={<PublicMenu />} />
         {/* Add more routes as needed */}
       </Routes>
       <Toaster />

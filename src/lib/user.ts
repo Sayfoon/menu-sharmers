@@ -1,4 +1,3 @@
-
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
@@ -166,5 +165,26 @@ export const updateUserRestaurantId = async (userId: string, restaurantId: strin
   } catch (error) {
     console.error('Unexpected error updating restaurant ID:', error);
     return false;
+  }
+};
+
+// Get a restaurant by ID without authentication
+export const getPublicRestaurantById = async (restaurantId: string): Promise<Restaurant | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('id', restaurantId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching public restaurant:', error);
+      return null;
+    }
+    
+    return data as Restaurant;
+  } catch (error) {
+    console.error('Unexpected error fetching public restaurant:', error);
+    return null;
   }
 };

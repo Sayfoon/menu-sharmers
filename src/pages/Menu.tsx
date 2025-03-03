@@ -15,6 +15,7 @@ import { MenuSection as MenuSectionType, MenuItem, Restaurant, User } from '@/ty
 import MenuHeader from '@/components/menu/MenuHeader';
 import MenuSection from '@/components/menu/MenuSection';
 import NoSections from '@/components/menu/NoSections';
+import ShareMenu from '@/components/menu/ShareMenu';
 import { formatPrice } from '@/utils/formatters';
 
 const Menu = () => {
@@ -95,9 +96,13 @@ const Menu = () => {
       
       <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
         <div className="max-w-5xl mx-auto">
-          <Button variant="outline" onClick={() => navigate('/dashboard')} className="mb-8">
-            &larr; Back to Dashboard
-          </Button>
+          <div className="flex justify-between items-center mb-8">
+            <Button variant="outline" onClick={() => navigate('/dashboard')} className="mb-0">
+              &larr; Back to Dashboard
+            </Button>
+            
+            {restaurant && <ShareMenu restaurant={restaurant} />}
+          </div>
           
           {restaurant && <MenuHeader restaurant={restaurant} />}
 

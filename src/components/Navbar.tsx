@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -15,7 +14,6 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fetch the current user when the component mounts
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -30,7 +28,6 @@ const Navbar = () => {
 
     fetchCurrentUser();
 
-    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -42,7 +39,6 @@ const Navbar = () => {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
@@ -91,7 +87,6 @@ const Navbar = () => {
           />
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-1">
           {currentUser ? (
             <>
@@ -124,6 +119,16 @@ const Navbar = () => {
                 } transition-colors duration-200`}
               >
                 Menu Sections
+              </Link>
+              <Link 
+                to="/menu" 
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/menu' 
+                    ? 'text-terracotta-600' 
+                    : 'text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400'
+                } transition-colors duration-200`}
+              >
+                Menu
               </Link>
               <Link 
                 to="/preview" 
@@ -167,7 +172,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Navigation Button */}
         <button 
           className="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none" 
           onClick={toggleMenu}
@@ -176,7 +180,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation Menu */}
       {isMenuOpen && (
         <div className="md:hidden glass-panel animate-slide-in-right p-4">
           <div className="flex flex-col space-y-3">
@@ -214,6 +217,17 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Menu Sections
+                </Link>
+                <Link 
+                  to="/menu" 
+                  className={`px-3 py-2 rounded-md text-base font-medium ${
+                    location.pathname === '/menu' 
+                      ? 'text-terracotta-600' 
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Menu
                 </Link>
                 <Link 
                   to="/preview" 
