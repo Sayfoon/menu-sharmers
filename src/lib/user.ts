@@ -52,8 +52,7 @@ export const login = async (email: string, password: string): Promise<User | nul
   try {
     console.log('Attempting login for:', email);
     
-    // Clear any existing session before logging in
-    await supabase.auth.signOut();
+    // Don't clear existing session before logging in
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -96,7 +95,8 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const logout = async (): Promise<void> => {
   try {
-    // Clear any local storage or IndexedDB data to ensure complete logout
+    // Only clear localStorage when user explicitly logs out
+    // Don't call this function automatically
     localStorage.clear();
     
     const { error } = await supabase.auth.signOut();
