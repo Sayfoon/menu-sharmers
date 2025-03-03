@@ -81,9 +81,9 @@ const Navbar = () => {
           className="flex items-center hover:opacity-80 transition-opacity"
         >
           <img 
-            src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
+            src="/lovable-uploads/5e65b482-f201-4648-bc2e-d840848c0454.png" 
             alt="Sharmers Menus" 
-            className="h-10"
+            className="h-12"
           />
         </Link>
 
@@ -129,16 +129,6 @@ const Navbar = () => {
                 } transition-colors duration-200`}
               >
                 Menu
-              </Link>
-              <Link 
-                to="/preview" 
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === '/preview' 
-                    ? 'text-terracotta-600' 
-                    : 'text-gray-700 dark:text-gray-300 hover:text-terracotta-600 dark:hover:text-terracotta-400'
-                } transition-colors duration-200`}
-              >
-                Preview
               </Link>
               <Button 
                 variant="ghost" 
@@ -228,17 +218,6 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Menu
-                </Link>
-                <Link 
-                  to="/preview" 
-                  className={`px-3 py-2 rounded-md text-base font-medium ${
-                    location.pathname === '/preview' 
-                      ? 'text-terracotta-600' 
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Preview
                 </Link>
                 <button 
                   className="px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 text-left"

@@ -17,9 +17,9 @@ const Index = () => {
             <div className="animate-slide-up">
               <div className="mb-6">
                 <img 
-                  src="/lovable-uploads/e89218ce-4e43-4e91-ba9e-80dfa195d803.png" 
+                  src="/lovable-uploads/5e65b482-f201-4648-bc2e-d840848c0454.png" 
                   alt="Sharmers Menus" 
-                  className="h-24 mx-auto"
+                  className="h-28 mx-auto"
                 />
               </div>
               <span className="inline-block bg-terracotta-100 text-terracotta-800 rounded-full px-3 py-1 text-sm font-medium mb-5">
