@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { User } from '@/types';
 import { NavLinks } from './NavLinks';
+import { AuthLinks } from './AuthLinks';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -25,6 +26,13 @@ export const MobileMenu = ({
         <NavLinks 
           currentUser={currentUser} 
           onLogout={onLogout} 
+          isMobile={true}
+          onLinkClick={onClose}
+        />
+        
+        <AuthLinks
+          currentUser={currentUser}
+          onLogout={onLogout}
           isMobile={true}
           onLinkClick={onClose}
         />
