@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { getCurrentUser } from '@/lib/user';
 import { getRestaurantById, getAllRestaurants as fetchAllRestaurants } from '@/lib/restaurant';
 import { Restaurant, User } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useRestaurantData = () => {
   const navigate = useNavigate();
@@ -15,7 +14,6 @@ export const useRestaurantData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   
   const [formData, setFormData] = useState<Omit<Restaurant, 'id'>>({
@@ -32,20 +30,20 @@ export const useRestaurantData = () => {
 
   const fetchUserAndRestaurantData = useCallback(async () => {
     try {
-      setLoading(true);
-      console.log('Fetching user and restaurant data...');
-      
-      // Attempt to get current user
+      // Redirect to login if not authenticated
       const user = await getCurrentUser();
-      console.log('Current user from getCurrentUser:', user);
+      console.log('Current user:', user);
+      setCurrentUser(user);
       
       if (!user) {
-        console.log('No active session found, redirecting to login');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to manage your restaurant",
+          variant: "destructive"
+        });
         navigate('/login');
         return;
       }
-      
-      setCurrentUser(user);
 
       // Load restaurant data if user has one
       if (user.restaurantId) {
@@ -53,7 +51,6 @@ export const useRestaurantData = () => {
         const restaurantData = await getRestaurantById(user.restaurantId);
         if (restaurantData) {
           console.log('Restaurant data loaded:', restaurantData);
-          setRestaurant(restaurantData);
           setFormData({
             name: restaurantData.name,
             description: restaurantData.description || '',
@@ -110,32 +107,11 @@ export const useRestaurantData = () => {
     }
   }, []);
 
-  // Listen for auth changes
+  // Initial data load
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && session)) {
-        console.log('User is signed in, fetching data');
-        await fetchUserAndRestaurantData();
-      } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out, redirecting to login');
-        setCurrentUser(null);
-        navigate('/login');
-      }
-    });
-
-    // Initial data load
     fetchUserAndRestaurantData();
     getAllRestaurants();
-
-    // Clean up subscription when component unmounts
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, [fetchUserAndRestaurantData, getAllRestaurants, navigate]);
+  }, [fetchUserAndRestaurantData, getAllRestaurants]);
 
   return {
     currentUser,
@@ -150,7 +126,6 @@ export const useRestaurantData = () => {
     refreshData: fetchUserAndRestaurantData,
     allRestaurants,
     loadingRestaurants,
-    getAllRestaurants,
-    restaurant
+    getAllRestaurants
   };
 };

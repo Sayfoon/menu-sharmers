@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { login, getCurrentUser } from '@/lib/user';
+import { login, getCurrentUser, logout } from '@/lib/user';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -13,145 +13,160 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   
-  // Check if user is already logged in
+  // Clear any stale session on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      setIsCheckingAuth(true);
+    const clearStaleSessions = async () => {
       try {
-        console.log("Checking if user is already authenticated...");
-        const user = await getCurrentUser();
-        
-        if (user) {
-          console.log("User already logged in, redirecting to dashboard");
-          navigate('/dashboard');
-        } else {
-          console.log("No user logged in, showing login form");
-        }
+        await logout();
+        console.log('Cleared any existing sessions');
       } catch (err) {
-        console.error("Error checking auth:", err);
-      } finally {
-        setIsCheckingAuth(false);
+        console.error('Error clearing existing sessions:', err);
       }
     };
     
-    checkAuth();
-  }, [navigate]);
+    clearStaleSessions();
+  }, []);
   
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      setIsCheckingSession(true);
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          console.log('Active user session found:', user);
+          navigate('/dashboard');
+        } else {
+          console.log('No active session found, staying on login page');
+        }
+      } catch (err) {
+        console.error('Error checking current user:', err);
+        // Don't show an error to the user for this case
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+    
+    checkUser();
+  }, [navigate]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Submitting login form with:", email);
     setError('');
-    setIsLoading(true);
-    
-    if (!email || !password) {
-      setError('Email and password are required');
-      setIsLoading(false);
-      return;
-    }
+    setIsSubmitting(true);
     
     try {
+      console.log('Attempting login with:', email);
       const user = await login(email, password);
       
       if (user) {
-        console.log("Login successful, user:", user);
+        console.log('Login successful, user:', user);
         toast({
-          title: "Login successful",
+          title: "Logged in successfully",
           description: "Welcome back!",
         });
-        
-        // Add a delay before navigation to ensure session is properly stored
-        setTimeout(() => {
-          console.log("Navigating to dashboard");
-          navigate('/dashboard');
-        }, 1000);
+        navigate('/dashboard');
       } else {
-        console.error("Login returned null user");
-        setError('Invalid email or password');
+        console.error('Login failed: no user returned');
+        setError('Invalid email or password. Please try again.');
       }
     } catch (error: any) {
-      console.error('Login error in component:', error);
-      setError(error.message || 'Failed to login');
-      toast({
-        title: "Login failed",
-        description: error.message || "An error occurred during login",
-        variant: "destructive",
-      });
+      console.error('Login error:', error);
+      // Show more specific error message if available
+      if (error.message) {
+        setError(`Error: ${error.message}`);
+      } else {
+        setError('An error occurred during login. Please check your credentials and try again.');
+      }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  // Show loading state while checking session
+  if (isCheckingSession) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <p className="text-gray-600">Checking authentication status...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center py-12 px-4 bg-gray-50 dark:bg-gray-900">
-        <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+      <main className="flex-grow flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md animate-slide-up">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-8">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold">Welcome back</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your account</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back</h1>
+              <p className="text-gray-600 dark:text-gray-400">Sign in to manage your restaurant menu</p>
             </div>
             
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md mb-6 text-sm">
                 {error}
               </div>
             )}
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input 
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <Input
                   id="email"
                   type="email"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
                   required
-                  className="mt-1"
-                  disabled={isLoading}
                 />
               </div>
               
-              <div>
+              <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm text-terracotta-600 hover:text-terracotta-800">
+                  <Link 
+                    to="#" 
+                    className="text-sm text-terracotta-600 hover:text-terracotta-800 dark:text-terracotta-400 dark:hover:text-terracotta-300"
+                  >
                     Forgot password?
                   </Link>
                 </div>
-                <Input 
+                <Input
                   id="password"
                   type="password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
                   required
-                  className="mt-1"
-                  disabled={isLoading}
                 />
               </div>
               
               <Button 
                 type="submit" 
                 className="w-full bg-terracotta-600 hover:bg-terracotta-700"
-                disabled={isLoading}
+                disabled={isSubmitting}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
               </Button>
               
-              <div className="text-center mt-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Don't have an account?{' '}
-                  <Link to="/register" className="text-terracotta-600 hover:text-terracotta-800 font-medium">
-                    Create an account
-                  </Link>
-                </p>
+              <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{' '}
+                <Link 
+                  to="/register" 
+                  className="text-terracotta-600 hover:text-terracotta-800 dark:text-terracotta-400 dark:hover:text-terracotta-300 font-medium"
+                >
+                  Sign up
+                </Link>
               </div>
             </form>
           </div>

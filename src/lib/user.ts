@@ -2,55 +2,58 @@
 import { User } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
-// Get the current user from the session
+// Authentication helpers using Supabase Auth
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    console.log("Checking for current session...");
-    const { data, error } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error("Session error:", error.message);
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw sessionError;
+    }
+    
+    if (!session) {
+      console.log('No active session found');
       return null;
     }
     
-    if (!data.session) {
-      console.log("No active session found");
-      return null;
-    }
+    console.log('Session found, fetching profile for user:', session.user.id);
     
-    console.log("Session found:", data.session.user.id);
-    
-    // Get user profile from profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', data.session.user.id)
-      .maybeSingle();
+      .eq('id', session.user.id)
+      .single();
     
     if (profileError) {
-      console.error("Error fetching profile:", profileError);
+      console.error('Profile fetch error:', profileError);
+      // Don't throw here, just return null if profile not found
+      return null;
+    }
+    
+    if (!profile) {
+      console.error('No profile found for user:', session.user.id);
+      return null;
     }
     
     return {
-      id: data.session.user.id,
-      email: data.session.user.email || '',
-      name: profile?.name || '',
-      restaurantId: profile?.restaurant_id || undefined
+      id: session.user.id,
+      email: session.user.email || '',
+      name: profile.name || '',
+      restaurantId: profile.restaurant_id || undefined
     };
   } catch (error) {
     console.error('Error getting current user:', error);
-    return null;
+    throw error;
   }
 };
 
-// Login with email and password
 export const login = async (email: string, password: string): Promise<User | null> => {
   try {
-    console.log(`Attempting login with email: ${email}`);
+    console.log('Attempting login for:', email);
     
-    // Clear any existing session first to prevent conflicts
+    // Clear any existing session before logging in
     await supabase.auth.signOut();
-    console.log("Cleared existing session");
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -58,35 +61,25 @@ export const login = async (email: string, password: string): Promise<User | nul
     });
     
     if (error) {
-      console.error("Login error:", error.message, error);
+      console.error('Supabase login error:', error);
       throw error;
     }
     
-    if (!data.user) {
-      console.error("Login failed: No user returned");
-      throw new Error('Login failed');
-    }
-    
-    console.log("Auth response success:", data);
-    console.log("User authenticated:", data.user.id);
-    console.log("Session created:", !!data.session);
-    
     if (!data.session) {
-      console.error("No session created after login");
-      throw new Error('Session creation failed');
+      console.error('No session returned after login');
+      return null;
     }
     
-    // Get user profile
+    console.log('Login successful, fetching profile');
+    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
-      .maybeSingle();
-    
+      .single();
+      
     if (profileError) {
-      console.error("Error fetching profile:", profileError);
-    } else {
-      console.log("Profile retrieved:", profile);
+      console.error('Profile fetch error after login:', profileError);
     }
     
     return {
@@ -95,31 +88,52 @@ export const login = async (email: string, password: string): Promise<User | nul
       name: profile?.name || '',
       restaurantId: profile?.restaurant_id || undefined
     };
-  } catch (error: any) {
-    console.error('Login error:', error);
+  } catch (error) {
+    console.error('Unexpected login error:', error);
     throw error;
   }
 };
 
-// Register a new user
+export const logout = async (): Promise<void> => {
+  try {
+    // Clear any local storage or IndexedDB data to ensure complete logout
+    localStorage.clear();
+    
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+    console.log('User signed out successfully');
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
+};
+
 export const register = async (name: string, email: string, password: string): Promise<User | null> => {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name }
+        data: {
+          name
+        }
       }
     });
     
-    if (error || !data.user) {
-      throw error || new Error('Registration failed');
+    if (error) {
+      console.error('Registration error:', error);
+      return null;
     }
     
-    // Auto-login after registration if no session
-    if (!data.session) {
-      return await login(email, password);
+    if (!data.user) {
+      console.error('No user returned after registration');
+      return null;
     }
+    
+    console.log('Registration successful');
     
     return {
       id: data.user.id,
@@ -128,38 +142,29 @@ export const register = async (name: string, email: string, password: string): P
       restaurantId: undefined
     };
   } catch (error) {
-    console.error('Registration error:', error);
-    throw error;
+    console.error('Unexpected registration error:', error);
+    return null;
   }
 };
 
-// Logout the current user
-export const logout = async (): Promise<void> => {
-  console.log("Logging out user");
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Logout error:", error);
-      throw error;
-    }
-    console.log("Logout successful");
-  } catch (error) {
-    console.error('Logout error:', error);
-    throw error;
-  }
-};
-
-// Update the restaurant ID for a user
+// Update restaurant ID for a user
 export const updateUserRestaurantId = async (userId: string, restaurantId: string): Promise<boolean> => {
   try {
+    console.log(`Updating restaurant ID for user ${userId} to ${restaurantId}`);
     const { error } = await supabase
       .from('profiles')
       .update({ restaurant_id: restaurantId })
       .eq('id', userId);
       
-    return !error;
+    if (error) {
+      console.error('Error updating restaurant ID:', error);
+      return false;
+    }
+    
+    console.log('Restaurant ID updated successfully');
+    return true;
   } catch (error) {
-    console.error('Error updating restaurant ID:', error);
+    console.error('Unexpected error updating restaurant ID:', error);
     return false;
   }
 };

@@ -1,23 +1,54 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser, getRestaurantById } from '@/lib/data';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { Restaurant, User } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { 
-    currentUser, 
-    allRestaurants, 
-    restaurant, 
-    loading 
-  } = useRestaurantData();
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Redirect to login if not authenticated
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        // Load restaurant data if user has one
+        if (user.restaurantId) {
+          const restaurantData = await getRestaurantById(user.restaurantId);
+          if (restaurantData) {
+            setRestaurant(restaurantData);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
   const handleCreateRestaurant = () => {
     navigate('/profile');
   };
@@ -28,17 +59,7 @@ const Dashboard = () => {
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-24 md:py-32">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center">
-              <div className="animate-pulse flex flex-col items-center">
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-10"></div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 h-48"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <p className="text-center">Loading dashboard...</p>
           </div>
         </main>
         <Footer />
@@ -46,10 +67,8 @@ const Dashboard = () => {
     );
   }
 
-  // If there's no user at this point, return null to prevent any errors
-  // The hook should handle the redirect to login
   if (!currentUser) {
-    return null;
+    return null; // Will redirect in useEffect
   }
 
   return (
@@ -65,7 +84,7 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {currentUser.restaurantId ? (
+          {restaurant ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader>
@@ -74,12 +93,12 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-4 mb-4">
-                    {restaurant?.logo && (
+                    {restaurant.logo && (
                       <img src={restaurant.logo} alt={restaurant.name} className="w-16 h-16 rounded-full object-cover" />
                     )}
                     <div>
-                      <h3 className="font-medium">{restaurant?.name}</h3>
-                      <p className="text-sm text-gray-500">{restaurant?.cuisine} cuisine</p>
+                      <h3 className="font-medium">{restaurant.name}</h3>
+                      <p className="text-sm text-gray-500">{restaurant.cuisine} cuisine</p>
                     </div>
                   </div>
                 </CardContent>
