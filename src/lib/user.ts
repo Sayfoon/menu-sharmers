@@ -1,4 +1,4 @@
-import { User } from '../types';
+import { User, Restaurant } from '../types';
 import { supabase } from '../integrations/supabase/client';
 
 // Authentication helpers using Supabase Auth
