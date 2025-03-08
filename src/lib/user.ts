@@ -43,7 +43,8 @@ export const getCurrentUser = async (): Promise<User | null> => {
     };
   } catch (error) {
     console.error('Error getting current user:', error);
-    throw error;
+    // Don't rethrow the error, just return null
+    return null;
   }
 };
 

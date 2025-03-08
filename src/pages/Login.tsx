@@ -20,19 +20,16 @@ const Login = () => {
   // Check if user is already logged in, but don't log them out
   useEffect(() => {
     const checkUser = async () => {
-      setIsCheckingSession(true);
       try {
         const user = await getCurrentUser();
         if (user) {
           console.log('Active user session found:', user);
           navigate('/dashboard');
-        } else {
-          console.log('No active session found, staying on login page');
         }
       } catch (err) {
         console.error('Error checking current user:', err);
-        // Don't show an error to the user for this case
       } finally {
+        // Set checking session to false regardless of outcome
         setIsCheckingSession(false);
       }
     };
